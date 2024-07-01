@@ -1,0 +1,20 @@
+{
+    "name": "AZAuto2",
+    "version": "2",
+    "manifest_version": 3,
+    "permissions": ["scripting", "activeTab", "storage"],
+    "action": {
+      "default_popup": "index.html"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://atoz.amazon.work/*"],
+        "js": ["src/content/vto.content.ts"],
+        "run_at": "document_idle"
+      }
+    ],
+    "icons": {
+        "256": "public/icons/icon_1_1.png"
+    }
+  }
+  
