@@ -24,19 +24,22 @@ const getFilterKeyVal = (filter: FilterType['startTime']) => {
   return {};
 }
 
-const FilterList: FC<{ list: FilterType[], onDelete: (filter:FilterType)=>any }> = ({ list, onDelete }) => {
+const FilterList: FC<{ list: FilterType[], onDelete: (filter:FilterType)=>any, onClearAll:()=>any }> = ({ list, onDelete, onClearAll }) => {
   const keyPrefix = useId();
   const onClickDelete = (filter: FilterType) => {
     onDelete(filter);
   }
   return <>
     <div className="flex flex-col gap-4">
-      <h5 className="text-base text-gray-600">Applied filters</h5>
+      <div className="flex justify-between items-center">
+        <h5 className="text-base text-gray-600 flex justify-between items-start">Applied filters</h5>
+        <Button onClick={()=>onClearAll()} color="gray" size={'sm'} >Clear All</Button>
+      </div>
       {list.map((filter, index) => {
         const startTimeOpVal = getFilterKeyVal(filter.startTime);
         const endTimeOpVal = getFilterKeyVal(filter.endTime);
         const duration = (endTimeOpVal.value||0)-(startTimeOpVal.value||0);
-        return <React.Fragment key={keyPrefix + index}>
+        return <React.Fragment key={keyPrefix + index+JSON.stringify(filter)}>
           <Card>
             <div className="flex flex-col gap-0 text-xs">
               <div className="flex justify-between items-start">
@@ -92,6 +95,9 @@ function App() {
 
     setFilterList(newFilterList);
   }
+  const clearAllFilter = () => {
+    setFilterList([]);
+  }
   const onVTOFilterAdd = (filter: FilterType) => {
     setFilterList(prev=>[...prev, filter]);
     console.log('Add VTO Filter', filter)
@@ -101,23 +107,23 @@ function App() {
   }
 
   return (
-    <div style={{ minWidth: '28rem' }}>
+    <div style={{ minWidth: '28rem', background: '#eeeeee01' }}>
       <TopNav></TopNav>
       <div className="p-4 flex flex-col gap-4">
         <Preference></Preference>
-        <Tabs variant="underline" theme={flowbiteTabsTheme}>
+        <Tabs variant="fullWidth" theme={flowbiteTabsTheme}>
           <Tabs.Item active title="VTO">
             <div className="flex flex-col gap-4">
               <Label>Create a VTO Filter</Label>
               <FilterInputForm onSubmit={onVTOFilterAdd} forFirstName={forName} submitBtnText="Add VTO Filter" />
-              <FilterList onDelete={onFilterDelete} list={filterList} />
+              <FilterList onClearAll={clearAllFilter} onDelete={onFilterDelete} list={filterList} />
             </div>
           </Tabs.Item>
           <Tabs.Item title="VET">
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <Label>Create a VET Filter</Label>
               <FilterInputForm onSubmit={onVETFilterAdd} forFirstName={forName} submitBtnText="Add VET Filter" />
-              <FilterList onDelete={onFilterDelete} list={filterList} />
+              <FilterList onClearAll={clearAllFilter} onDelete={onFilterDelete} list={filterList} />
             </div>
           </Tabs.Item>
         </Tabs>

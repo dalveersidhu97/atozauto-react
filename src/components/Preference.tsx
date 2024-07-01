@@ -25,7 +25,7 @@ const NumberInput: FC<{ label: string, desc: string, unit: string, value: number
     return <>
         <div className="flex flex-col gap-1">
             {label && <Label className="font-normal text-xs" htmlFor={inputIdPrefix}>{label}</Label>}
-            <div className="relative flex items-center max-w-[10rem]">
+            <div className="relative flex items-center">
                 <button onClick={onDecrement} type="button" id={inputIdPrefix+"decrement-button"} data-input-counter-decrement={inputIdPrefix} className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-gray-200 border border-gray-300 rounded-s-lg py-2 px-4 h-11 focus:ring-gray-100 dark:focus:ring-gray-700">
                     <svg className="w-3 h-3 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
                         <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 1h16" />
@@ -57,7 +57,7 @@ const RadioInput: FC<{ onChange: (value: string) => any, name: string, options: 
         {options.map(({ label, value }, index) => <React.Fragment key={inputIdPrefix + index}>
             <div className="flex items-center gap-2">
                 <Radio onChange={onCheckedChange} id={`${inputIdPrefix}-${index}`} name={name} value={value} defaultChecked={defaultValue === value} />
-                <Label htmlFor={`${inputIdPrefix}-${index}`}>{label}</Label>
+                <Label className="text-xs" htmlFor={`${inputIdPrefix}-${index}`}>{label}</Label>
             </div>
         </React.Fragment>)}
     </>
@@ -100,7 +100,7 @@ export const Preference: FC = () => {
         <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4">
                 <div className="flex gap-4 items-center">
-                    <Label className="min-w-24 text-gray-600">Test Mode:</Label>
+                    <Label className="min-w-28 text-gray-600">Test Mode:</Label>
                     <RadioInput
                         name="TestMode"
                         onChange={(mode) => setTestMode(mode)}
@@ -110,7 +110,7 @@ export const Preference: FC = () => {
                     <div></div>
                 </div>
                 <div className="flex gap-4 items-center">
-                    <Label className="min-w-24 text-gray-600">Refresh Mode:</Label>
+                    <Label className="min-w-28 text-gray-600">Refresh Mode:</Label>
                     <RadioInput
                         name="RefreshMode"
                         onChange={(mode) => setRefreshMode(mode)}
@@ -120,7 +120,7 @@ export const Preference: FC = () => {
                 </div>
                 {refreshMode==='Smart' && <div className="flex flex-col gap-4 border rounded-md p-4">
                     <Label className="text-gray-500">Smart Mode Settings</Label>
-                    <div className="flex items-center flex-wrap gap-4">
+                    <div className="grid grid-cols-2 gap-y-4 gap-x-2">
                         <div className="flex flex-col gap-2">
                             <NumberInput min={1} max={60} label="Hot Minutes Multiplier " unit="Minutes" desc={hotMinsMultDesc} value={minutesMultiplier} onChange={(val) => setMinutesMultiplier(val)} />
                         </div>
