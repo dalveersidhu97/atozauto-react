@@ -5,3 +5,11 @@ export type FilterType = {
     startTime: { [key in TimeOps]?: number },
     endTime: { [key in TimeOps]?: number },
 }
+export type PreferenceType = {
+    minutesMultiplier: number,
+    hotSecondsLessThan: number,
+    minutesIncrementor: number,
+    secondsIncrementor: number,
+    refreshMode: 'Off' | 'Smart' | 'Full Speed',
+    testMode: 'On' | 'Off',
+};

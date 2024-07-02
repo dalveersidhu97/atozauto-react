@@ -9,7 +9,17 @@
     "content_scripts": [
       {
         "matches": ["https://atoz.amazon.work/*"],
+        "js": ["src/content/userInfo.content.ts"],
+        "run_at": "document_idle"
+      },
+      {
+        "matches": ["https://atoz.amazon.work/voluntary_time_off/*"],
         "js": ["src/content/vto.content.ts"],
+        "run_at": "document_idle"
+      },
+      {
+        "matches": ["https://atoz.amazon.work/shifts/schedule/find*"],
+        "js": ["src/content/vet.content.ts"],
         "run_at": "document_idle"
       }
     ],
