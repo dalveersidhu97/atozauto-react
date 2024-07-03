@@ -91,8 +91,8 @@ export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: Fil
         <TextInput id="firstName" value={forName} onChange={({ target: { value } }) => setForName(value.trim())} placeholder="First Name" addon="&nbsp;For&nbsp;" />
         <div className="grid grid-cols-3 gap-2">
             <Datepicker minDate={new Date()} value={formatDateForInput(date)} onSelectedDateChanged={onChangeDateInput} />
-            <Button color={datesAreOnSameDay(date, today)?'blue':'gray'} onClick={()=>setDate(new Date())}>Today</Button>
-            <Button color={datesAreOnSameDay(date, tomorrow)?'blue':'gray'} onClick={()=>{
+            <Button outline={datesAreOnSameDay(date, today)} color={'gray'} onClick={()=>setDate(new Date())}>Today</Button>
+            <Button outline={datesAreOnSameDay(date, tomorrow)} color={'gray'} onClick={()=>{
                 const d = new Date();
                 d.setDate(d.getDate()+1);
                 setDate(d);
