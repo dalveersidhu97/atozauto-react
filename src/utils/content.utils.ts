@@ -220,7 +220,10 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
 
     if (currentMins % hotMinsMultiplier === 0) {
         if (currentSeconds < hotSecondsLessThan) {
-            return window.location.reload();
+            secheduledDate.setSeconds(
+                secheduledDate.getSeconds()
+                + (hotSecondsLessThan < incrementSecondsBy ? hotSecondsLessThan : incrementSecondsBy)
+            );
         } else {
             incrementMins();
             secheduledDate.setSeconds(0);
