@@ -1,9 +1,11 @@
-import React, { FC, useId, useState } from "react";
-import { adjustIntMinsForMinimumValue, formatDate, getCurrentTime, intMinsToTimeStr, moveObjectWithKeyToFront, timeStringToIntMins } from "../utils/formatters";
+import React, { FC, useEffect, useId, useState } from "react";
+import { adjustIntMinsForMinimumValue, formatDate, formatDateForInput, getCurrentTime, intMinsToTimeStr, moveObjectWithKeyToFront, timeStringToIntMins } from "../utils/formatters";
 import { Button, Datepicker, Dropdown, TextInput } from "flowbite-react";
 import { IoIosArrowDown } from "react-icons/io";
 import { FilterType } from "../types";
 import { TimeOperators } from "../constants";
+import { useUserInfo } from "../hooks/useUserInfo";
+import { datesAreOnSameDay } from "../utils/comparison.utils";
 
 const TimeInput: FC<{ defaultValue?: number, min?: number, max?: number, onChange: (intMinutes: number, timeStr: string) => any }> = ({ defaultValue, onChange, min, max }) => {
     const inputIdPrefix = useId();
@@ -46,38 +48,56 @@ const Select: FC<{ options: { key: string, label: string }[], selectedKey: strin
     );
 }
 
-export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: FilterType) => any, forFirstName: string }> = ({ submitBtnText, onSubmit, forFirstName }) => {
+export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: FilterType) => any }> = ({ submitBtnText, onSubmit }) => {
 
     const [startTimeMins, setStartTimeMins] = useState<number>(80);
     const [endTimeMins, setEndTimeMins] = useState<number>(1510);
-    const [dateStr, setDateStr] = useState('Jul 04, 2024');
-    const [forName, setForName] = useState(forFirstName);
+    const [date, setDate] = useState(new Date());
+    const [userInfo] = useUserInfo();
+    const [forName, setForName] = useState('');
     const [startTimeOp, setStartTimeOp] = useState('eq');
     const [endTimeOp, setEndTimeOp] = useState('eq');
+
+    useEffect(() => {
+        if (userInfo?.name)
+            setForName(userInfo.name)
+    }, [userInfo?.name]);
 
     const onSubmitfilter = () => {
         if (startTimeMins === undefined || endTimeMins === undefined) return;
         const startTime = startTimeMins;
         const endTime = adjustIntMinsForMinimumValue(endTimeMins, startTime);
+        
         const filter: FilterType = {
             startTime: { [startTimeOp]: startTime },
             endTime: { [endTimeOp]: endTime },
-            date: dateStr,
-            forName
+            date: formatDate(date),
+            forName: forName.trim()
         }
         onSubmit(filter);
     }
 
     const onChangeDateInput = (date: Date) => {
         if (!date) return;
-        setDateStr(formatDate(date));
+        setDate(date);
     }
 
     const operators = TimeOperators;
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate()+1);
 
     return <>
-        <TextInput id="firstName" defaultValue={forName} onChange={({ target: { value } }) => setForName(value.trim())} placeholder="First Name" addon="&nbsp;For&nbsp;" />
-        <Datepicker minDate={new Date()} defaultDate={new Date(dateStr)} onSelectedDateChanged={onChangeDateInput} />
+        <TextInput id="firstName" value={forName} onChange={({ target: { value } }) => setForName(value.trim())} placeholder="First Name" addon="&nbsp;For&nbsp;" />
+        <div className="grid grid-cols-3 gap-2">
+            <Datepicker minDate={new Date()} value={formatDateForInput(date)} onSelectedDateChanged={onChangeDateInput} />
+            <Button color={datesAreOnSameDay(date, today)?'blue':'gray'} onClick={()=>setDate(new Date())}>Today</Button>
+            <Button color={datesAreOnSameDay(date, tomorrow)?'blue':'gray'} onClick={()=>{
+                const d = new Date();
+                d.setDate(d.getDate()+1);
+                setDate(d);
+            }}>Tomorrow</Button>
+        </div>
         <div className="grid grid-cols-3 gap-2">
             <Button color={'gray'}>Start Time</Button>
             <Select options={operators} selectedKey={startTimeOp} onChange={(opKey) => setStartTimeOp(opKey)} />

@@ -6,10 +6,17 @@ export type FilterType = {
     endTime: { [key in TimeOps]?: number },
 }
 export type PreferenceType = {
-    minutesMultiplier: number,
+    hotMinutesMultiplier: number,
     hotSecondsLessThan: number,
-    minutesIncrementor: number,
-    secondsIncrementor: number,
+    minutesIncrementBy: number,
+    secondsIncrementBy: number,
     refreshMode: 'Off' | 'Smart' | 'Full Speed',
     testMode: 'On' | 'Off',
 };
+
+export type UserInfo = {
+    name: string,
+}
+
+export type VTOType = any;
+export type VETType = any;

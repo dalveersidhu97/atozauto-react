@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useChromeLocalStorage } from "./useChromeLocalStorage";
 import { FilterType } from "../types";
+import { deepEqualObjects } from "../utils/comparison.utils";
 
 export const useFilterList = (filterListKey: string) => {
 	const [filterList, setFilterList] = useState<FilterType[]>([]);
@@ -12,10 +13,10 @@ export const useFilterList = (filterListKey: string) => {
 	const deleteFilter = (filter: FilterType) => {
 		listStorage.set((oldList) => {
 			let newFilterList = (oldList || []).slice().filter(f => {
-				return JSON.stringify(f) !== JSON.stringify(filter);
+				return !deepEqualObjects(f, filter);
 			});
 			return newFilterList;
-		}, (newList) => setFilterList(newList || []))
+		}, (newList) => { setFilterList(newList || []); })
 	}
 	const clearAllFilter = () => {
 		listStorage.set(undefined, (newVal) => setFilterList(newVal || []), []);

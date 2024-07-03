@@ -9,10 +9,17 @@ export const TimeOperators = [
 ]
 
 export const defaultPreference: PreferenceType = {
-    minutesMultiplier: 1,
+    hotMinutesMultiplier: 1,
     hotSecondsLessThan: 7,
-    minutesIncrementor: 1,
-    secondsIncrementor: 0,
+    minutesIncrementBy: 1,
+    secondsIncrementBy: 0,
     refreshMode: 'Smart',
     testMode: 'Off',
+}
+
+export const StorageKeys = {
+    vetFilters: 'vetFilters',
+    vtoFilters: 'vtoFilters',
+    preference: 'preference',
+    userInfo: 'userInfo'
 }
