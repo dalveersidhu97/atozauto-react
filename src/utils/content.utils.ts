@@ -216,30 +216,20 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
         } else {
             secheduledDate.setMinutes(nextHotMins)
         }
+        secheduledDate.setSeconds(0);
+        secheduledDate.setMilliseconds(0);
     }
 
     if (currentMins % hotMinsMultiplier === 0) {
         if (currentSeconds < hotSecondsLessThan) {
-            secheduledDate.setSeconds(
-                secheduledDate.getSeconds()
-                + (hotSecondsLessThan < incrementSecondsBy ? hotSecondsLessThan : incrementSecondsBy)
-            );
-        } else {
+            const nextRefreshSecond = hotSecondsLessThan < currentSeconds+incrementSecondsBy ? hotSecondsLessThan : currentSeconds+incrementSecondsBy
+            secheduledDate.setSeconds(nextRefreshSecond);
+        } else 
             incrementMins();
-            secheduledDate.setSeconds(0);
-        }
     } else {
-        if (currentSeconds < hotSecondsLessThan) {
-            secheduledDate.setSeconds(
-                secheduledDate.getSeconds()
-                + (hotSecondsLessThan < incrementSecondsBy ? hotSecondsLessThan : incrementSecondsBy)
-            );
-        } else {
-            incrementMins();
-            secheduledDate.setSeconds(0);
-        }
+        incrementMins();
     }
-    secheduledDate.setMilliseconds(50);
+    secheduledDate.setMilliseconds(secheduledDate.getMilliseconds()+50);
 
     const delay = secheduledDate.getTime() - now.getTime();
     setTimeout(() => window.location.reload(), delay);
