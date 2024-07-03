@@ -13,21 +13,19 @@ const loaded = () => {
     return true;
 }
 
-const reloadIfNoResponse = () => {
-    let noResponseReloadTimeout: number | undefined = undefined;
-    chrome.storage.local.get(StorageKeys.preference, function (result) {
-        const preference = result.preference || {};
-        if (preference.refreshMode !== 'Off') {
-            noResponseReloadTimeout = setTimeout(() => window.location.reload(), 3 * 1000 * 60);
-        }
-    });
-    return noResponseReloadTimeout;
-}
-
 export const startMain = (main: (preference: PreferenceType) => void) => {
 
     console.clear();
-    const noResponseReloadTimeout = reloadIfNoResponse();
+    let noResponseReloadTimeout: number | undefined = undefined;
+    const reloadIfNoResponse = () => {
+        chrome.storage.local.get(StorageKeys.preference, function (result) {
+            const preference = result.preference || {};
+            if (preference.refreshMode !== 'Off') {
+                noResponseReloadTimeout = setTimeout(() => window.location.reload(), 10*1000);
+            }
+        });
+    }
+    reloadIfNoResponse();
     setTimeout(() => !!setUserInfo && setUserInfo(), 100);
 
     const sessionInterval = setInterval(() => {
@@ -44,8 +42,8 @@ export const startMain = (main: (preference: PreferenceType) => void) => {
 
     const inverval = setInterval(() => {
         if (loaded()) {
-            clearInterval(inverval);
             !!noResponseReloadTimeout && clearTimeout(noResponseReloadTimeout);
+            clearInterval(inverval);
             chrome.storage.local.get(StorageKeys.preference, function (result) {
                 const preference = result.preference || {};
                 main(preference);
