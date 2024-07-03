@@ -16,10 +16,14 @@ export const defaultPreference: PreferenceType = {
     refreshMode: 'Smart',
     testMode: 'Off',
 }
+export const defaultUIPreference = {
+    smartModeCollapsed: false
+}
 
 export const StorageKeys = {
     vetFilters: 'vetFilters',
     vtoFilters: 'vtoFilters',
     preference: 'preference',
-    userInfo: 'userInfo'
+    userInfo: 'userInfo',
+    uiPreference: 'UIPreference'
 }

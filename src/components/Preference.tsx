@@ -1,10 +1,12 @@
-import { Label, Radio } from "flowbite-react";
+import { Accordion, Label, Radio } from "flowbite-react";
 import React, { useEffect } from "react";
 import { FC, useId, useState } from "react";
 import { padWithZero } from "../utils/formatters";
 import { useChromeLocalStorage } from "../hooks/useChromeLocalStorage";
 import { PreferenceType } from "../types";
 import { StorageKeys, defaultPreference } from "../constants";
+import { accordianTheme } from "../flowbite-themes/accordian.theme";
+import { useUIPreference } from "../hooks/useUIPreference";
 
 const NumberInput: FC<{ label: string, desc: string, unit: string, value: number, onChange: (value: number) => any, min?: number, max?: number }> = ({ label, desc, unit, value, onChange, min, max }) => {
     const inputIdPrefix = useId();
@@ -68,12 +70,12 @@ export const Preference: FC = () => {
 
     const refreshModeOptions = [{ label: 'Off', value: 'Off' }, { label: 'Smart', value: 'Smart' }, { label: 'Full Speed', value: 'Full Speed' }];
     const testModeOptions = [{ label: 'Off', value: 'Off' }, { label: 'On', value: 'On' }]
-
     const [preference, setPreferenceState] = useState<PreferenceType>(defaultPreference);
     const p = preference;
+    // const [UIPreference, setUIPreference] = useUIPreference();
 
     const { set } = useChromeLocalStorage<PreferenceType>({
-        key: StorageKeys.preference, 
+        key: StorageKeys.preference,
         getter: (pref) => {
             setPreferenceState(pref || defaultPreference)
         },
@@ -115,7 +117,28 @@ export const Preference: FC = () => {
                         options={refreshModeOptions}
                     />
                 </div>
-                {p.refreshMode === 'Smart' && <div className="flex flex-col gap-4 border rounded-md p-4">
+                {p.refreshMode === 'Smart' && <Accordion theme={accordianTheme}>
+                    <Accordion.Panel>
+                        <Accordion.Title className="text-sm !p-4">Smart mode settings</Accordion.Title>
+                        <Accordion.Content>
+                            <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                                <div className="flex flex-col gap-2">
+                                    <NumberInput min={1} max={60} label="Hot Minutes Multiplier " unit="Minutes" desc={hotMinsMultDesc} value={p.hotMinutesMultiplier} onChange={(val) => setPreference({ hotMinutesMultiplier: val })} />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <NumberInput min={1} max={60} label="Refresh for first " unit="Seconds" desc={`When its a hot minute`} value={p.hotSecondsLessThan} onChange={(val) => setPreference({ hotSecondsLessThan: val })} />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <NumberInput min={0} max={59} label="Refresh after every" unit="Seconds" desc="When its a hot minute" value={p.secondsIncrementBy} onChange={(val) => setPreference({ secondsIncrementBy: val })} />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                    <NumberInput min={1} max={60} label="Refresh after every " unit="Minutes" desc="After hot minute is over" value={p.minutesIncrementBy} onChange={(val) => setPreference({ minutesIncrementBy: val })} />
+                                </div>
+                            </div>
+                        </Accordion.Content>
+                    </Accordion.Panel>
+                </Accordion>}
+                {/* {p.refreshMode === 'Smart' && <div className="flex flex-col gap-4 border rounded-md p-4">
                     <Label className="text-gray-500">Smart Mode Settings</Label>
                     <div className="grid grid-cols-2 gap-y-4 gap-x-2">
                         <div className="flex flex-col gap-2">
@@ -131,7 +154,7 @@ export const Preference: FC = () => {
                             <NumberInput min={1} max={60} label="Refresh after every " unit="Minutes" desc="After hot minute is over" value={p.minutesIncrementBy} onChange={(val) => setPreference({ minutesIncrementBy: val })} />
                         </div>
                     </div>
-                </div>}
+                </div>} */}
             </div>
         </div>
     </>

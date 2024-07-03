@@ -6,7 +6,7 @@ export const flowbiteTabsTheme = {
         "default": "flex-wrap border-b border-gray-200 dark:border-gray-700",
         "underline": "-mb-px flex-wrap border-b border-gray-200 dark:border-gray-700",
         "pills": "flex-wrap space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400",
-        "fullWidth": "grid w-full grid-flow-col divide-x divide-gray-200 rounded-none text-sm font-medium shadow dark:divide-gray-700 dark:text-gray-400"
+        "fullWidth": "grid w-full grid-flow-col divide-x divide-gray-200 rounded-lg overflow-hidden text-sm font-medium shadow dark:divide-gray-700 dark:text-gray-400"
       },
       "tabitem": {
         "base": "flex items-center justify-center rounded-t-lg p-4 text-sm font-medium first:ml-0 focus:outline-none disabled:cursor-not-allowed disabled:text-gray-400 disabled:dark:text-gray-500",
@@ -33,9 +33,9 @@ export const flowbiteTabsTheme = {
             }
           },
           "fullWidth": {
-            "base": "ml-0 flex w-full rounded-none first:ml-0",
+            "base": "ml-0 flex w-full first:ml-0 rounded-lg",
             "active": {
-              "on": "active rounded-none bg-gray-100 p-4 text-gray-900 dark:bg-gray-700 dark:text-white",
+              "on": "active rounded-none bg-cyan-700 p-4 text-white dark:bg-gray-700 dark:text-white",
               "off": "rounded-none bg-white hover:bg-gray-50 hover:text-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white"
             }
           }
