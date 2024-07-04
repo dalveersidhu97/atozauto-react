@@ -10,7 +10,8 @@
       {
         "matches": ["https://atoz.amazon.work/*"],
         "js": ["src/content/userInfo.content.ts"],
-        "run_at": "document_idle"
+        "run_at": "document_idle",
+        "css": ["info-box.css"]
       },
       {
         "matches": ["https://atoz.amazon.work/voluntary_time_off/*"],
@@ -23,6 +24,7 @@
         "run_at": "document_idle"
       }
     ],
+    
     "icons": {
         "256": "public/icons/icon_1_1.png"
     }

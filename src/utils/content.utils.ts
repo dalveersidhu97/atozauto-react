@@ -146,7 +146,7 @@ const getArryObjectIndex = (obj: Object, arr: Object[]) => {
 }
 
 
-export const sortArray = (acceptables: { vto?:VTOType, vet?: VETType, filter: FilterType }[], filters: FilterType[]) => {
+export const sortArray = (acceptables: { vto?: VTOType, vet?: VETType, filter: FilterType }[], filters: FilterType[]) => {
     function compare(a: any, b: any) {
         if (getArryObjectIndex(a.filter, filters) < getArryObjectIndex(b.filter, filters))
             return -1;
@@ -194,6 +194,28 @@ export const removeFilter = (filterKey: string, filterToDelete: FilterType) => {
     });
 }
 
+const injectInfoToPage = (html: string) => {
+    const id = 'azauto-info-box';
+    let infoBox = document.getElementById(id);
+    if (!infoBox) { // create info box if does not exist
+        infoBox = document.createElement('div');
+        infoBox.id = 'azauto-info-box';
+        infoBox.classList.add('azauto-info-box');
+        document.body.appendChild(infoBox);
+    }
+    infoBox.innerHTML = html;
+}
+const createInfoInnerHTML = (formattedScheduleTime: string, delaySeconds: number) => {
+    const delaySecs = delaySeconds%60;
+    const delyMins = (delaySeconds-delaySecs)/60;
+    const delayStr = delaySeconds<=60?`${delaySeconds}s`:`${delyMins}m ${delaySecs%60}s`
+    return `
+        <div id="azauto-info-title">Reloading</div>
+        <div>${formattedScheduleTime}</div>
+        <div>${delayStr}</div>
+    `;
+}
+
 export const finalCallBack = (filters: FilterType[], preference: PreferenceType) => {
     const secheduledDate = new Date();
     const now = new Date();
@@ -222,16 +244,17 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
 
     if (currentMins % hotMinsMultiplier === 0) {
         if (currentSeconds < hotSecondsLessThan) {
-            const nextRefreshSecond = hotSecondsLessThan < currentSeconds+incrementSecondsBy ? hotSecondsLessThan : currentSeconds+incrementSecondsBy
+            const nextRefreshSecond = hotSecondsLessThan < currentSeconds + incrementSecondsBy ? hotSecondsLessThan : currentSeconds + incrementSecondsBy
             secheduledDate.setSeconds(nextRefreshSecond);
-        } else 
+        } else
             incrementMins();
     } else {
         incrementMins();
     }
-    secheduledDate.setMilliseconds(secheduledDate.getMilliseconds()+50);
+    secheduledDate.setMilliseconds(secheduledDate.getMilliseconds() + 50);
 
-    const delay = secheduledDate.getTime() - now.getTime();
+    let delay = secheduledDate.getTime() - now.getTime();
+    if (delay < 0) delay = 0;
     setTimeout(() => window.location.reload(), delay);
     const formattedScheduleTime = secheduledDate.toLocaleTimeString('en-US', {
         hour: 'numeric',
@@ -239,9 +262,13 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
         second: '2-digit',
         hour12: true
     });
-    console.log('Reloading at', formattedScheduleTime, `(in ${(delay / 1000).toFixed(2)}s)`);
+    const realodingIn = (delay / 1000);
+    console.log('Reloading at', formattedScheduleTime, `(in ${realodingIn.toFixed(2)}s)`);
+    injectInfoToPage(createInfoInnerHTML(formattedScheduleTime, Math.round(realodingIn)));
     setInterval(() => {
-        const reloadingIn = ((secheduledDate.getTime() - new Date().getTime()) / 1000);
+        let reloadingIn = ((secheduledDate.getTime() - new Date().getTime()) / 1000);
+        if (reloadingIn < 0) reloadingIn = 0;
         console.log('Realoding in', `${reloadingIn < 0 ? 0 : reloadingIn.toFixed(2)}s`);
-    }, 5000);
+        injectInfoToPage(createInfoInnerHTML(formattedScheduleTime, Math.round(reloadingIn)));
+    }, 1000);
 }
