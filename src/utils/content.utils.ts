@@ -304,7 +304,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
     let isDragging = false;
 
     function onMouseDown(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
+        // event.preventDefault();
         isDragging = true;
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
@@ -317,7 +317,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
         }
     }
     function onMouseMove(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
+        // event.preventDefault();
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
 
@@ -342,7 +342,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
         }
     }
     function onMouseUp(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
+        // event.preventDefault();
         isDragging = false;
     }
     return { onMouseDown, onMouseMove, onMouseUp };
