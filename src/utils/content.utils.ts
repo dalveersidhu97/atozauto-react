@@ -215,8 +215,11 @@ const injectInfoToPage = (html: string) => {
             infoBox.classList.add('azauto-info-box');
             document.body.appendChild(infoBox);
             infoBox.onmousedown = onMouseDown;
-            document.onmouseup = onMouseUp;
             document.onmousemove = onMouseMove;
+            document.onmouseup = onMouseUp;
+            
+            infoBox.ontouchstart = onMouseDown;
+            document.ontouchend = onMouseUp;
         }
         infoBox.innerHTML = html;
     })
@@ -298,15 +301,20 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
     let offsetX: number, offsetY: number;
     let isDragging = false;
 
-    function onMouseDown(event: MouseEvent) {
+    function onMouseDown(event: MouseEvent | TouchEvent) {
         event.preventDefault();
         isDragging = true;
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
-        offsetX = event.clientX - draggableElement.getBoundingClientRect().left;
-        offsetY = event.clientY - draggableElement.getBoundingClientRect().top;
+        if (event instanceof MouseEvent) {
+            offsetX = event.clientX - draggableElement.getBoundingClientRect().left;
+            offsetY = event.clientY - draggableElement.getBoundingClientRect().top;
+        } else if (event instanceof TouchEvent && event.touches.length === 1) {
+            offsetX = event.touches[0].clientX - draggableElement.getBoundingClientRect().left;
+            offsetY = event.touches[0].clientY - draggableElement.getBoundingClientRect().top;
+        }
     }
-    function onMouseMove(event: MouseEvent) {
+    function onMouseMove(event: MouseEvent | TouchEvent) {
         event.preventDefault();
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
@@ -314,8 +322,14 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
         const maxTop = window.innerHeight - draggableElement.offsetHeight;
         const maxLeft = window.innerWidth - draggableElement.offsetWidth;
         if (isDragging) {
-            let left = event.clientX - offsetX;
-            let top = event.clientY - offsetY;
+            let left, top;
+            if (event instanceof MouseEvent) {
+                left = event.clientX - offsetX;
+                top = event.clientY - offsetY;
+            } else if (event instanceof TouchEvent && event.touches.length === 1) {
+                left = event.touches[0].clientX - offsetX;
+                top = event.touches[0].clientY - offsetY;
+            } else { left = 0, top = 0; }
             if (left > maxLeft) left = maxLeft;
             if (left < 0) left = 0;
             if (top > maxTop) top = maxTop;
@@ -325,7 +339,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
             callback({ top, left });
         }
     }
-    function onMouseUp(event: MouseEvent) {
+    function onMouseUp(event: MouseEvent | TouchEvent) {
         event.preventDefault();
         isDragging = false;
     }
