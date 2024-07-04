@@ -25,5 +25,6 @@ export const StorageKeys = {
     vtoFilters: 'vtoFilters',
     preference: 'preference',
     userInfo: 'userInfo',
-    uiPreference: 'UIPreference'
+    uiPreference: 'UIPreference',
+    infoBoxPos: 'infoBoxPos'
 }

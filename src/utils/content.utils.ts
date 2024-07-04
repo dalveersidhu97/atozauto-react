@@ -197,22 +197,43 @@ export const removeFilter = (filterKey: string, filterToDelete: FilterType) => {
 const injectInfoToPage = (html: string) => {
     const id = 'azauto-info-box';
     let infoBox = document.getElementById(id);
-    if (!infoBox) { // create info box if does not exist
-        infoBox = document.createElement('div');
-        infoBox.id = 'azauto-info-box';
-        infoBox.classList.add('azauto-info-box');
-        document.body.appendChild(infoBox);
-    }
-    infoBox.innerHTML = html;
+    const defaultTop = '20rem';
+    const defaultLeft = '.5rem';
+    chrome.storage.local.get(StorageKeys.infoBoxPos, (result) => {
+        const pos: { top: string, left: string } = result[StorageKeys.infoBoxPos] || { top: defaultTop, lef: defaultLeft };
+        const onMove = (pos: { top: number, left: number }) => {
+            // save position
+            chrome.storage.local.set({ [StorageKeys.infoBoxPos]: { top: pos.top + 'px', left: pos.left + 'px' } });
+        }
+
+        if (!infoBox) { // create info box if does not exist
+            const { onMouseDown, onMouseMove, onMouseUp } = createDraggableListeners(id, onMove);
+            infoBox = document.createElement('div');
+            infoBox.style.top = pos.top;
+            infoBox.style.left = pos.left;
+            infoBox.id = 'azauto-info-box';
+            infoBox.classList.add('azauto-info-box');
+            document.body.appendChild(infoBox);
+            infoBox.onmousedown = onMouseDown;
+            document.onmouseup = onMouseUp;
+            document.onmousemove = onMouseMove;
+        }
+        infoBox.innerHTML = html;
+    })
+
+
+
 }
 const createInfoInnerHTML = (formattedScheduleTime: string, delaySeconds: number) => {
-    const delaySecs = delaySeconds%60;
-    const delyMins = (delaySeconds-delaySecs)/60;
-    const delayStr = delaySeconds<=60?`${delaySeconds}s`:`${delyMins}m ${delaySecs%60}s`
+    const delaySecs = delaySeconds % 60;
+    const delyMins = (delaySeconds - delaySecs) / 60;
+    const delayStr = delaySeconds <= 60 ? `${delaySeconds}s` : `${delyMins}m ${delaySecs % 60}s`
     return `
-        <div id="azauto-info-title">Reloading</div>
-        <div>${formattedScheduleTime}</div>
-        <div>${delayStr}</div>
+        <div id="azauto-info-box-container">
+            <div id="azauto-info-title">Reloading</div>
+            <div>${formattedScheduleTime}</div>
+            <div>${delayStr}</div>
+        </div>
     `;
 }
 
@@ -271,4 +292,42 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
         console.log('Realoding in', `${reloadingIn < 0 ? 0 : reloadingIn.toFixed(2)}s`);
         injectInfoToPage(createInfoInnerHTML(formattedScheduleTime, Math.round(reloadingIn)));
     }, 1000);
+}
+
+export const createDraggableListeners = (id: string, callback: (a: { top: number, left: number }) => void) => {
+    let offsetX: number, offsetY: number;
+    let isDragging = false;
+
+    function onMouseDown(event: MouseEvent) {
+        event.preventDefault();
+        isDragging = true;
+        const draggableElement = document.getElementById(id);
+        if (!draggableElement) return;
+        offsetX = event.clientX - draggableElement.getBoundingClientRect().left;
+        offsetY = event.clientY - draggableElement.getBoundingClientRect().top;
+    }
+    function onMouseMove(event: MouseEvent) {
+        event.preventDefault();
+        const draggableElement = document.getElementById(id);
+        if (!draggableElement) return;
+
+        const maxTop = window.innerHeight - draggableElement.offsetHeight;
+        const maxLeft = window.innerWidth - draggableElement.offsetWidth;
+        if (isDragging) {
+            let left = event.clientX - offsetX;
+            let top = event.clientY - offsetY;
+            if (left > maxLeft) left = maxLeft;
+            if (left < 0) left = 0;
+            if (top > maxTop) top = maxTop;
+            if (top < 0) top = 0;
+            draggableElement.style.top = `${top}px`;
+            draggableElement.style.left = `${left}px`;
+            callback({ top, left });
+        }
+    }
+    function onMouseUp(event: MouseEvent) {
+        event.preventDefault();
+        isDragging = false;
+    }
+    return { onMouseDown, onMouseMove, onMouseUp };
 }
