@@ -217,8 +217,8 @@ const injectInfoToPage = (html: string) => {
             infoBox.onmousedown = onMouseDown;
             document.onmousemove = onMouseMove;
             document.onmouseup = onMouseUp;
-            
-            infoBox.ontouchstart = onMouseDown;
+
+            infoBox.addEventListener('touchstart', onMouseDown, { passive: false });
             document.ontouchend = onMouseUp;
         }
         infoBox.innerHTML = html;
