@@ -48,22 +48,24 @@ const Select: FC<{ options: { key: string, label: string }[], selectedKey: strin
     );
 }
 
-export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: FilterType) => any }> = ({ submitBtnText, onSubmit }) => {
+type CreateFilterFn = (filter: FilterType) => any;
+export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVETFilter: CreateFilterFn }> = ({ onCreateVETFilter, onCreateVTOFilter }) => {
 
     const [startTimeMins, setStartTimeMins] = useState<number>(80);
-    const [endTimeMins, setEndTimeMins] = useState<number>(1510);
+    const [endTimeMins, setEndTimeMins] = useState<number>(710);
     const [date, setDate] = useState(new Date());
     const [userInfo] = useUserInfo();
     const [forName, setForName] = useState('');
     const [startTimeOp, setStartTimeOp] = useState('eq');
     const [endTimeOp, setEndTimeOp] = useState('eq');
+    const [filterType, setFilterType] = useState<'VTO'|'VET'>('VTO');
 
     useEffect(() => {
         if (userInfo?.name)
             setForName(userInfo.name)
     }, [userInfo?.name]);
 
-    const onSubmitfilter = () => {
+    const onClickCreatefilter = () => {
         if (startTimeMins === undefined || endTimeMins === undefined) return;
         const startTime = startTimeMins;
         const endTime = adjustIntMinsForMinimumValue(endTimeMins, startTime);
@@ -74,7 +76,8 @@ export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: Fil
             date: formatDate(date),
             forName: forName.trim()
         }
-        onSubmit(filter);
+        const createFilter = filterType==='VTO'?onCreateVTOFilter:onCreateVETFilter;
+        createFilter(filter);
     }
 
     const onChangeDateInput = (date: Date) => {
@@ -89,6 +92,10 @@ export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: Fil
 
     return <>
         <TextInput id="firstName" value={forName} onChange={({ target: { value } }) => setForName(value.trim())} placeholder="First Name" addon="&nbsp;For&nbsp;" />
+        <div className="grid grid-cols-2 gap-2">
+            <Button outline={filterType==='VTO'} color={'gray'} onClick={()=>{setFilterType('VTO')}}>VTO</Button>
+            <Button outline={filterType==='VET'} color={'gray'} onClick={()=>{setFilterType('VET')}}>VET</Button>
+        </div>
         <div className="grid grid-cols-3 gap-2">
             <Datepicker minDate={new Date()} value={formatDateForInput(date)} onSelectedDateChanged={onChangeDateInput} />
             <Button outline={datesAreOnSameDay(date, today)} color={'gray'} onClick={()=>setDate(new Date())}>Today</Button>
@@ -106,6 +113,6 @@ export const FilterInputForm: FC<{ submitBtnText: string, onSubmit: (filter: Fil
             <Select options={operators} selectedKey={endTimeOp} onChange={(opKey) => setEndTimeOp(opKey)} />
             <TimeInput onChange={(intMins) => setEndTimeMins(intMins)} defaultValue={endTimeMins} />
         </div>
-        <Button onClick={onSubmitfilter}>{submitBtnText}</Button>
+        <Button onClick={onClickCreatefilter}>{`Add ${filterType} Filter`}</Button>
     </>
 }

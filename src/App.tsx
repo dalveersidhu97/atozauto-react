@@ -1,4 +1,4 @@
-import { Label, Tabs } from "flowbite-react"
+import { Button, FooterDivider, Label, Tabs } from "flowbite-react"
 import { TopNav } from "./components/TopNav"
 import { flowbiteTabsTheme } from "./flowbite-themes/tabs.theme"
 import { Preference } from "./components/Preference"
@@ -21,27 +21,27 @@ function App() {
 		clearAllFilter: clearAllVETFilters
 	} = useFilterList(StorageKeys.vetFilters);
 
+	const onClickClearAll = () => {
+		clearAllVETFilters();
+		clearAllVTOFilters();
+	}
+
 	return (
-		<div style={{ minWidth: '30rem', background: '#eeeeee01' }}>
+		<div style={{ minWidth: '32rem', background: '#eeeeee01' }}>
 			<TopNav></TopNav>
 			<div className="p-4 flex flex-col gap-4">
 				<Preference></Preference>
-				<Tabs variant="fullWidth" theme={flowbiteTabsTheme}>
-					<Tabs.Item active title="VTO">
-						<div className="flex flex-col gap-4">
-							<Label>Create a VTO Filter</Label>
-							<FilterInputForm onSubmit={addVTOFilter} submitBtnText="Add VTO Filter" />
-							<FilterList onClearAll={clearAllVTOFilters} onDelete={deleteVTOFilter} list={vtoFilterList} />
-						</div>
-					</Tabs.Item>
-					<Tabs.Item title="VET">
-						<div className="flex flex-col gap-4">
-							<Label>Create a VET Filter</Label>
-							<FilterInputForm onSubmit={addVETFilter} submitBtnText="Add VET Filter" />
-							<FilterList onClearAll={clearAllVETFilters} onDelete={deleteVETFilter} list={vetFilterList} />
-						</div>
-					</Tabs.Item>
-				</Tabs>
+				<div className=" flex flex-col gap-4 border bg-gray-50 rounded-md p-4">
+					<h2 className="text-base text-gray-700">Create a Filter</h2>
+					<FilterInputForm onCreateVETFilter={addVETFilter} onCreateVTOFilter={addVTOFilter} />
+				</div>
+				<div className="flex justify-between items-center">
+					<h2 className="text-base text-gray-700">Active filters</h2>
+					<Button onClick={onClickClearAll} color="gray" size={'sm'} >Clear All</Button>
+				</div>
+				<FilterList onDelete={deleteVTOFilter} list={vtoFilterList} filterType={'VTO'} />
+				<FilterList onDelete={deleteVETFilter} list={vetFilterList} filterType={'VET'}/>
+				{vtoFilterList.length === 0 && vetFilterList.length===0 && <div className="text-center text-gray-500">No Filters</div>}
 			</div>
 		</div>
 	)

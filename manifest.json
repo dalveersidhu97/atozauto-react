@@ -1,6 +1,6 @@
 {
     "name": "AZAuto2",
-    "version": "2",
+    "version": "1",
     "manifest_version": 3,
     "permissions": ["scripting", "activeTab", "storage"],
     "action": {
