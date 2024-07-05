@@ -201,9 +201,13 @@ const injectInfoToPage = (html: string) => {
     const defaultLeft = '.5rem';
     chrome.storage.local.get(StorageKeys.infoBoxPos, (result) => {
         const pos: { top: string, left: string } = result[StorageKeys.infoBoxPos] || { top: defaultTop, lef: defaultLeft };
+        let timeout: number;
         const onMove = (pos: { top: number, left: number }) => {
-            // save position
-            chrome.storage.local.set({ [StorageKeys.infoBoxPos]: { top: pos.top + 'px', left: pos.left + 'px' } });
+            if(timeout) clearTimeout(timeout);
+            timeout = setTimeout(()=>{
+                // save position
+                chrome.storage.local.set({ [StorageKeys.infoBoxPos]: { top: pos.top + 'px', left: pos.left + 'px' } });
+            }, 100);
         }
 
         if (!infoBox) { // create info box if does not exist
