@@ -323,7 +323,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
         }
     }
     function onMouseMove(event: MouseEvent | TouchEvent) {
-        // event.preventDefault();
+        event.preventDefault();
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
 
