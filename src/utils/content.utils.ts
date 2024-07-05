@@ -223,6 +223,7 @@ const injectInfoToPage = (html: string) => {
             document.onmouseup = onMouseUp;
 
             infoBox.addEventListener('touchstart', (e) => {
+                e.preventDefault();
                 document.addEventListener('touchstart', (e) => {
                     onMouseDown(e);
                     document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
