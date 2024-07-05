@@ -1,7 +1,9 @@
 import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VTOType } from "../types";
+import { deepEqualObjects } from "../utils/comparison.utils";
 import { closeModal, finalCallBack, getUserInfo, isVTOAcceptable, looper, pressModalButton, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins } from "../utils/formatters";
+import { InjectorQueue, injectTextBoxToPage, removeInfoBox } from "../utils/html.utils";
 import { startMain } from "./init.content";
 
 const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
@@ -12,10 +14,12 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
         const h1 = expander.querySelector('h2')?.innerText;
         const vtoBadge = expander.querySelector('div[data-test-id="VtoForDay_countIcon"]');
 
-        if (!vtoBadge) return;
-        const numVTOText = vtoBadge.textContent || '';
-        const numVTO = +numVTOText;
-        if (!numVTO) return;
+        if (!isTestMode) {
+            if (!vtoBadge) return;
+            const numVTOText = vtoBadge.textContent || '';
+            const numVTO = +numVTOText;
+            if (!numVTO) return;
+        }
 
         const expandedContent = expander.querySelector('div[data-test-component="StencilExpanderContent"]');
         if (!expandedContent) return;
@@ -40,12 +44,13 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
 const acceptVTO = (vto: VTOType, isTestMode: boolean, callBack: () => void) => {
     console.log('Click VTO Button', vto);
     if (isTestMode) {
-        setTimeout(() => closeModal(callBack), 2000);
+        setTimeout(callBack, 2000);
         return;
     }
     vto.button.click()
     setTimeout(() => {
         pressModalButton(/^Accept VTO$/i, () => {
+            removeInfoBox();
             callBack && callBack();
             let counter = 1;
             const interval = setInterval(() => {
@@ -72,14 +77,17 @@ const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, 
     console.log('Acceptable VTOs', { acceptables });
     const acceptablesSortedAsFilters = sortArray(acceptables, filters);
     console.log('Acceptable Sorted As Filters VTOs', { acceptablesSortedAsFilters });
-
-    looper(acceptablesSortedAsFilters, (acceptable, callBack) => {
+    const injector = ()=>injectTextBoxToPage(`${acceptablesSortedAsFilters.length} Acceptable VTOs`);
+    InjectorQueue.add(injector);
+    looper(acceptablesSortedAsFilters, (acceptable, callBack, index) => {
         const vto = acceptable.vto;
         const filter = acceptable.filter;
+        const injector = ()=>injectTextBoxToPage(`Accepting VTO...</br>(${index+1} of ${acceptablesSortedAsFilters.length})`);
+        InjectorQueue.add(injector);
         acceptVTO(vto, isTestMode, () => {
-            removeFilter(StorageKeys.vtoFilters, filter);
+            !isTestMode && removeFilter(StorageKeys.vtoFilters, filter);
             vtos = vtos.filter(v => {
-                if (JSON.stringify(v) === JSON.stringify(vto)) return false;
+                if (deepEqualObjects(v, vto)) return false;
                 return true;
             });
             callBack();
@@ -96,7 +104,8 @@ const main = (preference: PreferenceType) => {
         const filters = (vtoFilters || []).filter((f: FilterType) => f.forName.toLowerCase() === userName.toLowerCase()) || [];
         console.log('filters', filters);
         if (!filters.length) return;
-
+        const injector = ()=>injectTextBoxToPage('Looking for VTOs...');
+        InjectorQueue.add(injector);
         acceptAllAcceptables(filters, () => {
             finalCallBack(filters, preference);
         }, { isTestMode });

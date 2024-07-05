@@ -1,5 +1,6 @@
 import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VETType } from "../types";
+import { deepEqualObjects } from "../utils/comparison.utils";
 import { closeModal, finalCallBack, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
 import { startMain } from "./init.content";
@@ -215,7 +216,7 @@ const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, 
         acceptVET(vet, isTestMode, (vetAccepted) => {
             !isTestMode && vetAccepted && removeFilter(StorageKeys.vetFilters, filter);
             vets = vets.filter(v => {
-                if (JSON.stringify(v) === JSON.stringify(vet)) return false;
+                if (deepEqualObjects(v, vet)) return false;
                 return true;
             });
             callBack();
