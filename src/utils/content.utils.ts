@@ -203,8 +203,8 @@ const injectInfoToPage = (html: string) => {
         const pos: { top: string, left: string } = result[StorageKeys.infoBoxPos] || { top: defaultTop, lef: defaultLeft };
         let timeout: number;
         const onMove = (pos: { top: number, left: number }) => {
-            if(timeout) clearTimeout(timeout);
-            timeout = setTimeout(()=>{
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(() => {
                 // save position
                 chrome.storage.local.set({ [StorageKeys.infoBoxPos]: { top: pos.top + 'px', left: pos.left + 'px' } });
             }, 100);
@@ -223,14 +223,16 @@ const injectInfoToPage = (html: string) => {
             document.onmouseup = onMouseUp;
 
             infoBox.addEventListener('touchstart', (e) => {
-                onMouseDown(e)
-                document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
-                const touchEndListener = (e: TouchEvent) => {
-                    document.removeEventListener('touchmove', onMouseMoveThrottled);
-                    onMouseUp(e);
-                    document.removeEventListener('touchend', touchEndListener);
-                };
-                document.addEventListener('touchend', touchEndListener);
+                document.addEventListener('touchstart', (e) => {
+                    onMouseDown(e);
+                    document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
+                    const touchEndListener = (e: TouchEvent) => {
+                        document.removeEventListener('touchmove', onMouseMoveThrottled);
+                        onMouseUp(e);
+                        document.removeEventListener('touchend', touchEndListener);
+                    };
+                    document.addEventListener('touchend', touchEndListener);
+                });
             }, { passive: false });
         }
         infoBox.innerHTML = html;
