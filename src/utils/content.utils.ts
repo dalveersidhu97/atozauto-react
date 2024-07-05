@@ -223,17 +223,14 @@ const injectInfoToPage = (html: string) => {
             document.onmouseup = onMouseUp;
 
             infoBox.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                document.addEventListener('touchstart', (e) => {
-                    onMouseDown(e);
-                    document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
-                    const touchEndListener = (e: TouchEvent) => {
-                        document.removeEventListener('touchmove', onMouseMoveThrottled);
-                        onMouseUp(e);
-                        document.removeEventListener('touchend', touchEndListener);
-                    };
-                    document.addEventListener('touchend', touchEndListener);
-                });
+                onMouseDown(e);
+                document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
+                const touchEndListener = (e: TouchEvent) => {
+                    document.removeEventListener('touchmove', onMouseMoveThrottled);
+                    onMouseUp(e);
+                    document.removeEventListener('touchend', touchEndListener);
+                };
+                document.addEventListener('touchend', touchEndListener);
             }, { passive: false });
         }
         infoBox.innerHTML = html;
