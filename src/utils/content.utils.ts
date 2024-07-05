@@ -207,7 +207,7 @@ const injectInfoToPage = (html: string) => {
         }
 
         if (!infoBox) { // create info box if does not exist
-            const { onMouseDown, onMouseMove, onMouseUp } = createDraggableListeners(id, onMove);
+            const { onMouseDown, onMouseMove, onMouseUp, onMouseMoveThrottled } = createDraggableListeners(id, onMove);
             infoBox = document.createElement('div');
             infoBox.style.top = pos.top;
             infoBox.style.left = pos.left;
@@ -218,11 +218,11 @@ const injectInfoToPage = (html: string) => {
             document.onmousemove = onMouseMove;
             document.onmouseup = onMouseUp;
 
-            infoBox.addEventListener('touchstart', (e)=>{
+            infoBox.addEventListener('touchstart', (e) => {
                 onMouseDown(e)
-                document.addEventListener('touchmove', onMouseMove, { passive: false });
-                const touchEndListener = (e: TouchEvent)=>{
-                    document.removeEventListener('touchmove', onMouseMove);
+                document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
+                const touchEndListener = (e: TouchEvent) => {
+                    document.removeEventListener('touchmove', onMouseMoveThrottled);
                     onMouseUp(e);
                     document.removeEventListener('touchend', touchEndListener);
                 };
@@ -308,6 +308,7 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
 export const createDraggableListeners = (id: string, callback: (a: { top: number, left: number }) => void) => {
     let offsetX: number, offsetY: number;
     let isDragging = false;
+    let rafPending = false;
 
     function onMouseDown(event: MouseEvent | TouchEvent) {
         event.preventDefault();
@@ -347,9 +348,18 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
             callback({ top, left });
         }
     }
+    function onMouseMoveThrottled(event: TouchEvent) {
+        if (!rafPending) {
+            rafPending = true;
+            requestAnimationFrame(() => {
+                onMouseMove(event);
+                rafPending = false;
+            });
+        }
+    }
     function onMouseUp(event: MouseEvent | TouchEvent) {
         event.preventDefault();
         isDragging = false;
     }
-    return { onMouseDown, onMouseMove, onMouseUp };
+    return { onMouseDown, onMouseMove, onMouseUp, onMouseMoveThrottled };
 }
