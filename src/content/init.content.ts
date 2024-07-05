@@ -16,7 +16,7 @@ const loaded = () => {
 export const startMain = (main: (preference: PreferenceType) => void) => {
 
     console.clear();
-    let noResponseReloadTimeout: number | undefined = undefined;
+    let noResponseReloadTimeout: NodeJS.Timeout;
     const reloadIfNoResponse = () => {
         chrome.storage.local.get(StorageKeys.preference, function (result) {
             const preference = result.preference || {};

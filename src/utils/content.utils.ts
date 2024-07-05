@@ -65,6 +65,7 @@ export const pressModalButtonTemp = (regex: RegExp, callBack: () => void) => {
 }
 
 export const getUserInfo = () => {
+    if (typeof document === 'undefined') return { name: '' };
     const navbar = document.querySelector('#navbar-menu');
     if (!navbar) return {};
     const img = navbar.querySelector(`img[alt="User's avatar"]`) as HTMLElement | undefined;
@@ -78,18 +79,53 @@ export const setUserInfo = () => {
     chrome.storage.local.set({ [StorageKeys.userInfo]: userInfo });
 }
 
-const parseDate = (dateString: string) => { // jul 03
-    const parts = dateString.split(' ');
-    const month = parts[0].toLowerCase();
-    const day = +parts[1];
-    return { month, day }
+function convertStringToNumber(str: string) {
+    // Remove non-numeric characters from the string
+    const numericStr = str.replace(/\D/g, '');
+    // Convert the cleaned string to a number
+    const number = parseInt(numericStr, 10); // Use radix 10 to ensure proper parsing
+    return number;
 }
-export const equalDateStrings = (dateString1: string, dateString2: string) => { // jul 03, Jul 3
+
+const parseDate = (dateString: string) => { // date formats: jul 03|Jul 3|July 5|Fri, Jul 05
+    if (!dateString || !dateString.trim())
+        return undefined;
+    const dateStr = dateString.trim().toLowerCase();
+    const shortMonths = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    const fullMonths = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const months = [...shortMonths, ...fullMonths];
+    const dateParts = dateStr.split(',');
+    for (let i = 0; i < dateParts.length; i++) {
+        const part = dateParts[i].trim();
+        const month = months.find(m => part.includes(m.toLowerCase()));
+        if (month) {
+            console.log(month, 'found');
+            const partsOfPart = part.split(' ');
+            if (partsOfPart.length === 2) {
+                const day = convertStringToNumber(partsOfPart[1]) || convertStringToNumber(partsOfPart[0]);
+                const fullMonthIndex = fullMonths.findIndex(m => m === month);
+                if (fullMonthIndex !== -1)
+                    return { month: shortMonths[fullMonthIndex], day }
+                return { month, day };
+            }
+        }
+    }
+}
+
+export const equalDateStrings = (dateString1: string, dateString2: string) => { // date formats: jul 03|Jul 3|July 5|Fri, Jul 05
     const parsedDate1 = parseDate(dateString1);
     const parsedDate2 = parseDate(dateString2);
-    if (parsedDate1.month.toLowerCase() === parsedDate2.month.toLowerCase() && parsedDate1.day === parsedDate1.day)
-        return true;;
-    return false;
+    console.log({ parsedDate1, parsedDate2 })
+    if (!parsedDate1 || !parsedDate2)
+        return false;
+    const datesEqual = parsedDate1.day === parsedDate2.day && parsedDate1.month === parsedDate2.month
+    return datesEqual;
 }
 
 const is = (val1: number, op: TimeOps, val2: number) => {
@@ -107,8 +143,8 @@ const is = (val1: number, op: TimeOps, val2: number) => {
 
 export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
     const userName = getUserInfo().name || '';
-    const vtoDate = vto.date.split(',')[0];
-    const requiredDate = filter.date.split(',')[0];
+    const vtoDate = vto.date;
+    const requiredDate = filter.date;
 
     if (filter.forName.toLowerCase().trim() !== userName.toLowerCase().trim()) {
         console.log('User name does not match')
@@ -201,7 +237,7 @@ const injectInfoToPage = (html: string) => {
     const defaultLeft = '.5rem';
     chrome.storage.local.get(StorageKeys.infoBoxPos, (result) => {
         const pos: { top: string, left: string } = result[StorageKeys.infoBoxPos] || { top: defaultTop, lef: defaultLeft };
-        let timeout: number;
+        let timeout: NodeJS.Timeout;
         const onMove = (pos: { top: number, left: number }) => {
             if (timeout) clearTimeout(timeout);
             timeout = setTimeout(() => {

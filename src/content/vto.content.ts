@@ -22,7 +22,7 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
         const cards = expandedContent.querySelectorAll('div[data-test-component="StencilReactCard"]');
         cards.forEach(card => {
             const button = card.querySelector('button');
-            if (button && button.innerText === 'Accept') {
+            if ((button && button.innerText === 'Accept') || isTestMode) {
                 const texts = card.querySelectorAll('div[data-test-component="StencilText"]');
                 const time = texts[0].textContent || '';
                 const times = time.split(' - ');
