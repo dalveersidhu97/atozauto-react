@@ -219,6 +219,7 @@ const injectInfoToPage = (html: string) => {
             document.onmouseup = onMouseUp;
 
             infoBox.addEventListener('touchstart', (e)=>{
+                onMouseDown(e)
                 document.addEventListener('touchmove', onMouseMove, { passive: false });
                 const touchEndListener = (e: TouchEvent)=>{
                     document.removeEventListener('touchmove', onMouseMove);
@@ -226,7 +227,6 @@ const injectInfoToPage = (html: string) => {
                     document.removeEventListener('touchend', touchEndListener);
                 };
                 document.addEventListener('touchend', touchEndListener);
-                onMouseDown(e)
             }, { passive: false });
         }
         infoBox.innerHTML = html;
@@ -310,7 +310,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
     let isDragging = false;
 
     function onMouseDown(event: MouseEvent | TouchEvent) {
-        // event.preventDefault();
+        event.preventDefault();
         isDragging = true;
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
@@ -348,7 +348,7 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
         }
     }
     function onMouseUp(event: MouseEvent | TouchEvent) {
-        // event.preventDefault();
+        event.preventDefault();
         isDragging = false;
     }
     return { onMouseDown, onMouseMove, onMouseUp };
