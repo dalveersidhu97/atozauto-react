@@ -218,10 +218,16 @@ const injectInfoToPage = (html: string) => {
             document.onmousemove = onMouseMove;
             document.onmouseup = onMouseUp;
 
-            infoBox.addEventListener('touchstart', onMouseDown, { passive: false });
-            document.addEventListener('touchmove', onMouseMove, { passive: false });
-            document.addEventListener('touchend', onMouseUp);
-
+            infoBox.addEventListener('touchstart', (e)=>{
+                document.addEventListener('touchmove', onMouseMove, { passive: false });
+                const touchEndListener = (e: TouchEvent)=>{
+                    document.removeEventListener('touchmove', onMouseMove);
+                    onMouseUp(e);
+                    document.removeEventListener('touchend', touchEndListener);
+                };
+                document.addEventListener('touchend', touchEndListener);
+                onMouseDown(e)
+            }, { passive: false });
         }
         infoBox.innerHTML = html;
     })
