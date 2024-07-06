@@ -1,7 +1,7 @@
 import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VTOType } from "../types";
 import { deepEqualObjects } from "../utils/comparison.utils";
-import { closeModal, finalCallBack, getUserInfo, isVTOAcceptable, looper, pressModalButton, removeFilter, sortArray } from "../utils/content.utils";
+import { closeModal, finalCallBack, getUserInfo, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins } from "../utils/formatters";
 import { InjectorQueue, injectTextBoxToPage, removeInfoBox } from "../utils/html.utils";
 import { startMain } from "./init.content";
@@ -49,16 +49,26 @@ const acceptVTO = (vto: VTOType, isTestMode: boolean, callBack: () => void) => {
     }
     vto.button.click()
     setTimeout(() => {
-        pressModalButton(/^Accept VTO$/i, () => {
+        const btnFound = pressModalButton(/^Accept VTO$/i, () => {
             removeInfoBox();
-            callBack && callBack();
             let counter = 1;
             const interval = setInterval(() => {
-                if (counter <= 10) clearInterval(interval);
-                pressModalButton(/^ok$/i, () => clearInterval(interval));
+                if (counter > 60) {
+                    clearInterval(interval);
+                    console.log('Ok button not found. Closing Modal')
+                    closeModal(callBack);
+                }
+                pressModalButtonTemp(/^ok$/i, () => {
+                    clearInterval(interval);
+                    callBack();
+                });
                 counter++;
-            }, 500)
+            }, 100)
         });
+        if (!btnFound) {
+            setTimeout(() => closeModal(callBack), 500);
+            console.log('Accept VTO Button Not Found')
+        }
         // pressModalButton(/^CANCEL$/i);
     }, 1000)
 }
@@ -77,12 +87,12 @@ const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, 
     console.log('Acceptable VTOs', { acceptables });
     const acceptablesSortedAsFilters = sortArray(acceptables, filters);
     console.log('Acceptable Sorted As Filters VTOs', { acceptablesSortedAsFilters });
-    const injector = ()=>injectTextBoxToPage(`${acceptablesSortedAsFilters.length} Acceptable VTOs`);
+    const injector = () => injectTextBoxToPage(`${acceptablesSortedAsFilters.length} Acceptable VTOs`);
     InjectorQueue.add(injector);
     looper(acceptablesSortedAsFilters, (acceptable, callBack, index) => {
         const vto = acceptable.vto;
         const filter = acceptable.filter;
-        const injector = ()=>injectTextBoxToPage(`Accepting VTO...</br>(${index+1} of ${acceptablesSortedAsFilters.length})`);
+        const injector = () => injectTextBoxToPage(`Accepting VTO...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
         InjectorQueue.add(injector);
         acceptVTO(vto, isTestMode, () => {
             !isTestMode && removeFilter(StorageKeys.vtoFilters, filter);
@@ -104,8 +114,6 @@ const main = (preference: PreferenceType) => {
         const filters = (vtoFilters || []).filter((f: FilterType) => f.forName.toLowerCase() === userName.toLowerCase()) || [];
         console.log('filters', filters);
         if (!filters.length) return;
-        const injector = ()=>injectTextBoxToPage('Looking for VTOs...');
-        InjectorQueue.add(injector);
         acceptAllAcceptables(filters, () => {
             finalCallBack(filters, preference);
         }, { isTestMode });

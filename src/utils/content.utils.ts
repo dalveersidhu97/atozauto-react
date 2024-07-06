@@ -202,15 +202,17 @@ export const looper = <T>(arr: T[], fn: (e: T, callback: () => void, i: number) 
     let intialDel = initialDelay || 0;
     if (arr.length > i) {
         console.log(loopName, ': Starting');
-        const fnToCall = () => fn(arr[i], () => {
-            if (arr.length - 1 > i) {
-                loopName && console.log(loopName, ': Next');
-                looper(arr, fn, whenDoneFn, loopName, delay, initialDelay, i + 1);
-            } else {
-                whenDoneFn();
-                loopName && console.log(loopName, ': Done')
-            };
-        }, i);
+        const fnToCall = () => {
+            fn(arr[i], () => {
+                if (arr.length - 1 > i) {
+                    loopName && console.log(loopName, ': Next');
+                    looper(arr, fn, whenDoneFn, loopName, delay, initialDelay, i + 1);
+                } else {
+                    whenDoneFn();
+                    loopName && console.log(loopName, ': Done')
+                };
+            }, i)
+        };
         setTimeout(fnToCall, (i === 0 ? 0 : delay) + (i === 0 ? intialDel : 0));
     } else {
         whenDoneFn();
@@ -272,6 +274,6 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
     if (delay < 0) delay = 0;
     setTimeout(() => window.location.reload(), delay);
 
-    const finalInjector = ()=>injectReloadingInfoBox(secheduledDate);
+    const finalInjector = () => injectReloadingInfoBox(secheduledDate);
     InjectorQueue.add(finalInjector);
 }

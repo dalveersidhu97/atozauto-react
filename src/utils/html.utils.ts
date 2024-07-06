@@ -59,7 +59,8 @@ export const injectReloadingInfoBoxMillis = (millisInReload: number) => {
 export const injectReloadingInfoBox = (secheduledDate: Date) => {
     const now = new Date();
     let reloadingInMillis = secheduledDate.getTime() - now.getTime();
-    const realodingIn = (reloadingInMillis / 1000);
+    let reloadingIn = (reloadingInMillis / 1000);
+    if (reloadingIn < 0) reloadingIn = 0;
 
     const formattedScheduleTime = secheduledDate.toLocaleTimeString('en-US', {
         hour: 'numeric',
@@ -67,7 +68,7 @@ export const injectReloadingInfoBox = (secheduledDate: Date) => {
         second: '2-digit',
         hour12: true
     });
-    injectInfoToPage(createReloadingInfoHTML(formattedScheduleTime, Math.round(realodingIn)));
+    injectInfoToPage(createReloadingInfoHTML(formattedScheduleTime, Math.round(reloadingIn)));
     setInterval(() => {
         let reloadingIn = ((secheduledDate!.getTime() - new Date().getTime()) / 1000);
         if (reloadingIn < 0) reloadingIn = 0;

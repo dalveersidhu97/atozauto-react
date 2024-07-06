@@ -3,6 +3,7 @@ import { FilterType, PreferenceType, VETType } from "../types";
 import { deepEqualObjects } from "../utils/comparison.utils";
 import { closeModal, finalCallBack, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
+import { InjectorQueue, injectTextBoxToPage, removeInfoBox } from "../utils/html.utils";
 import { startMain } from "./init.content";
 import { extractDateFromVetHeader } from "./vet.utils";
 
@@ -132,17 +133,6 @@ const waitForLoadingOver = (callBack: () => void) => {
     }, intervalMillis);
 }
 
-const getSelectedDay = () => {
-    const daySelector = document.querySelector('div[data-test-id="day-selector"]');
-    if (!daySelector) return undefined;
-    const tabList = daySelector.querySelector('div[role="tablist"]');
-    const labelQuery = `div[aria-label*="selected"]`;
-    if (!tabList) return undefined;
-    const card = tabList.querySelector(labelQuery);
-    return card;
-}
-
-
 const getNumberOfAvailableShiftsFromDayLabel = (text: string) => { // "Wednesday, Jun 26. 0 shifts available."
     const regex = /\b(\d+)\s+shifts?\s+available\b/;
     const match = text.match(regex);
@@ -207,18 +197,20 @@ const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, 
         }
     }
     console.log('Acceptable VETS', { acceptables });
-    const acceptablesSortedAsFilters = sortArray(acceptables, filters);
+    let acceptablesSortedAsFilters = sortArray(acceptables, filters);
     console.log('Acceptable Sorted As Filters VETS', { acceptablesSortedAsFilters });
+    const injector = () => injectTextBoxToPage(`${acceptablesSortedAsFilters.length} Acceptable VETs`);
+    InjectorQueue.add(injector);
 
-    looper(acceptablesSortedAsFilters, (acceptable: Acceptable, callBack: () => void) => {
+    looper(acceptablesSortedAsFilters, (acceptable: Acceptable, callBack, index) => {
         const vet = acceptable.vet;
         const filter = acceptable.filter;
+
+        const injector = () => injectTextBoxToPage(`Accepting VET...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
+        InjectorQueue.add(injector);
+        
         acceptVET(vet, isTestMode, (vetAccepted) => {
             !isTestMode && vetAccepted && removeFilter(StorageKeys.vetFilters, filter);
-            vets = vets.filter(v => {
-                if (deepEqualObjects(v, vet)) return false;
-                return true;
-            });
             callBack();
         });
     }, callBackOuter, 'AcceptVETSLooper', 200);
@@ -239,8 +231,8 @@ const prepareSelectableFilterDates = (filters: FilterType[]) => {
         }
         console.log('Pre Selected Date is', preSelectedDate);
     }
-    !!nextPreSelectedDate && selectableDates.push(nextPreSelectedDate);
-    return { selectableDates, preSelectedDate };
+    // !!nextPreSelectedDate && selectableDates.push(nextPreSelectedDate);
+    return { selectableDates, preSelectedDate, nextPreSelectedDate };
 }
 
 const main = (preference: PreferenceType) => {
@@ -251,8 +243,8 @@ const main = (preference: PreferenceType) => {
     chrome.storage.local.get(StorageKeys.vetFilters, function (result) {
         const filters = result.vetFilters || [];
         console.log('vetFilters', filters);
-        const { selectableDates, preSelectedDate } = prepareSelectableFilterDates(filters);
-
+        const { selectableDates, preSelectedDate, nextPreSelectedDate } = prepareSelectableFilterDates(filters);
+        
         looper(selectableDates, (date, callBack, index) => {
             const notWaitForLoading = date === preSelectedDate || index === selectableDates.length - 1;
             const shouldNotScroll = index === 0 || (index === selectableDates.length - 1 && selectableDates.length === 2)
@@ -260,6 +252,8 @@ const main = (preference: PreferenceType) => {
                 acceptAllAcceptables(filters, callBack, { isTestMode })
             }, !notWaitForLoading, !shouldNotScroll, isTestMode);
         }, () => {
+            selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);
+            removeInfoBox();
             finalCallBack(filters, preference);
         }, 'SelectDayLooper', 0, 0)
     });
