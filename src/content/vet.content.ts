@@ -4,18 +4,12 @@ import { closeModal, finalCallBack, isVTOAcceptable, looper, pressModalButton, p
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
 import { createInfoBoxWithHTML, InjectorQueue } from "../utils/html.utils";
 import { startMain } from "./init.content";
-import { extractDateFromVetHeader } from "./vet.utils";
 
-const getVetsFromContext = (context: Element, { isTestMode }: { isTestMode: boolean }) => {
+const getVetsFromContext = (date: string, context: Element, { isTestMode }: { isTestMode: boolean }) => {
     const presentation = document.querySelector('div[role="presentation"]');
     if (!presentation) return [];
-    const listHeader = presentation.querySelector('div[data-test-id="ClaimedShiftsColHeader"]');
-    if (!listHeader) return [];
-    const listHeaderText = listHeader.textContent || '';
-    const dateStr = extractDateFromVetHeader(listHeaderText);
     const vets: VETType[] = [];
     const items = context.querySelectorAll('div[role="listitem"]')
-    console.log(items.length);
     items.forEach(listItem => {
         const heading = listItem.querySelector('div[role="heading"]');
         if (!!heading) {
@@ -33,11 +27,10 @@ const getVetsFromContext = (context: Element, { isTestMode }: { isTestMode: bool
                     button,
                     startTimeStr,
                     endTimeStr,
-                    date: dateStr,
+                    date,
                     startTime,
                     endTime: convertTimeToMins(endTimeStr, startTime)
                 }
-                console.log(vet);
                 vets.push(vet);
             }
         }
@@ -46,16 +39,15 @@ const getVetsFromContext = (context: Element, { isTestMode }: { isTestMode: bool
     return vets;
 }
 
-const getVets = ({ isTestMode }: { isTestMode: boolean }) => {
+const getVets = (date: string, { isTestMode }: { isTestMode: boolean }) => {
     const presentation = document.querySelector('div[role="presentation"]');
     if (!presentation) return [];
-    const vets = getVetsFromContext(presentation, { isTestMode });
+    const vets = getVetsFromContext(date, presentation, { isTestMode });
     return vets;
 }
 
 
 const acceptVET = (vet: VETType, isTestMode: boolean, callBack: (vetAccepted?: boolean) => void) => {
-    console.log('Click VET Button', vet);
     vet.button.click();
     if (isTestMode) {
         setTimeout(() => closeModal(callBack), 2000);
@@ -86,8 +78,7 @@ const acceptVET = (vet: VETType, isTestMode: boolean, callBack: (vetAccepted?: b
     }, 0)
 }
 
-const waitForLoadingOver = (callBack: () => void) => {
-    // console.log('Waiting for vets Loading to Over.')
+const waitForLoadingOver = (date: string, callBack: () => void) => {
     let counter = 0;
     const intervalMillis = 500;
     const maxWaitMillis = 5000;
@@ -102,27 +93,23 @@ const waitForLoadingOver = (callBack: () => void) => {
         let loadingDone = false;
         const presentation = document.querySelector('div[role="presentation"]');
         if (!presentation) {
-            // console.log('VET: NO Presentation exists');
             return callBack()
         };
-        const rows = presentation.children;
-        if (rows.length === 3) {
-            const thirdRow = rows[2];
-            const vets = getVetsFromContext(thirdRow, { isTestMode: true });
+        const rows = presentation.querySelectorAll(':scope > div[data-test-component="StencilReactCol"]');
+        
+        if (rows.length === 2) {
+            const thirdRow = rows[1];
+            const vets = getVetsFromContext(date, thirdRow, { isTestMode: true });
             if (vets.length > 0) {
-                // console.log('VETs Loaded');
                 loadingDone = true;
             } else {
                 const firstListItem = thirdRow.querySelector('div[role="listitem"]');
                 if (firstListItem) {
-                    // console.log('VET: firstListItem exists');
                     const textDiv = firstListItem.querySelector('div[data-test-component="StencilText"]');
                     if (!!textDiv) {
                         const textContent = (textDiv.textContent || '');
-                        // console.log('VET: ', textContent);
                         const availableShiftsPattren = /There are \d+ available shifts\./;
                         loadingDone = !textContent.includes('There aren’t any available shifts.') && !availableShiftsPattren.test(textContent);
-                        // console.log(textDiv.innerText);
                     }
                 }
             }
@@ -132,7 +119,6 @@ const waitForLoadingOver = (callBack: () => void) => {
         }
 
         if (loadingDone) {
-            console.log({ loadingDone })
             clearInterval(interval);
             callBack();
         }
@@ -165,6 +151,7 @@ const selectDay = (inputDate: string, callback: () => void, shouldWaitForLoading
     const card = daySelector.querySelector(labelQuery) as HTMLElement;
     if (!card) {
         console.log('Day Tab not found for ', date);
+        callback();
         return;
     }
     const cardLabel = card.getAttribute("aria-label") || '';
@@ -177,7 +164,7 @@ const selectDay = (inputDate: string, callback: () => void, shouldWaitForLoading
         if (numAvailableShifts === 0 && !isTestMode)
             setTimeout(callback, 10);
         else {
-            shouldWaitForLoading && setTimeout(() => waitForLoadingOver(callback), 10);
+            shouldWaitForLoading && setTimeout(() => waitForLoadingOver(inputDate, callback), 10);
             !shouldWaitForLoading && setTimeout(callback, 10);
         }
         cardFound = true;
@@ -190,8 +177,8 @@ const removeDuplicates = (arr: string[] = []) => {
     return arr.filter((item, index) => arr.indexOf(item) === index);
 }
 
-const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, { isTestMode }: { isTestMode: boolean }) => {
-    let vets = getVets({ isTestMode });
+const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, { isTestMode }: { isTestMode: boolean }) => {
+    let vets = getVets(date, { isTestMode });
     console.log('Ready VETS', { vets });
     type Acceptable = { vet?: VETType, filter: FilterType };
     let acceptables: { vet: VETType, filter: FilterType }[] = [];
@@ -253,7 +240,7 @@ const main = (preference: PreferenceType) => {
         looper(selectableDates, (date, callBack, index) => {
             const notWaitForLoading = date === preSelectedDate;
             selectDay(date, () => {
-                acceptAllAcceptables(filters, callBack, { isTestMode })
+                acceptAllAcceptables(filters, date, callBack, { isTestMode })
             }, !notWaitForLoading, true, isTestMode);
         }, () => {
             selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);

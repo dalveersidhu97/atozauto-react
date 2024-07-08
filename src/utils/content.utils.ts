@@ -18,7 +18,6 @@ export const closeModal = (callBack: () => void) => {
         if (!modal) {
             console.log('No modal');
         } else {
-            console.log({ modal })
             const button = contains(modal, 'button[data-test-component="ModalCloseButton"]', '') as HTMLButtonElement;
             if (!button) {
                 console.log('No button');
@@ -71,7 +70,6 @@ export const getUserInfo = () => {
     if (!navbar) return {};
     const img = navbar.querySelector(`img[alt="User's avatar"]`) as HTMLElement | undefined;
     const name = img?.parentElement?.parentElement?.innerText;
-    console.log(name, img?.getAttribute('src'));
     return { name: name?.trim(), img: img?.getAttribute('src') }
 }
 
@@ -106,7 +104,6 @@ const parseDate = (dateString: string) => { // date formats: jul 03|Jul 3|July 5
         const part = dateParts[i].trim();
         const month = months.find(m => part.includes(m.toLowerCase()));
         if (month) {
-            console.log(month, 'found');
             const partsOfPart = part.split(' ');
             if (partsOfPart.length === 2) {
                 const day = convertStringToNumber(partsOfPart[1]) || convertStringToNumber(partsOfPart[0]);
@@ -122,7 +119,6 @@ const parseDate = (dateString: string) => { // date formats: jul 03|Jul 3|July 5
 export const equalDateStrings = (dateString1: string, dateString2: string) => { // date formats: jul 03|Jul 3|July 5|Fri, Jul 05
     const parsedDate1 = parseDate(dateString1);
     const parsedDate2 = parseDate(dateString2);
-    console.log({ parsedDate1, parsedDate2 })
     if (!parsedDate1 || !parsedDate2)
         return false;
     const datesEqual = parsedDate1.day === parsedDate2.day && parsedDate1.month === parsedDate2.month
@@ -138,7 +134,7 @@ const is = (val1: number, op: TimeOps, val2: number) => {
         case 'lte': { if (val1 <= val2) isValid = true; break; }
         case 'eq': { if (val1 === val2) isValid = true; break; }
     }
-    console.log(val1, op, val2, isValid)
+    isValid && console.log(val1, op, val2, isValid)
     return isValid;
 }
 
@@ -201,11 +197,9 @@ export const looper = <T>(arr: T[], fn: (e: T, callback: () => void, i: number) 
     let delay = delayTime || 0;
     let intialDel = initialDelay || 0;
     if (arr.length > i) {
-        console.log(loopName, ': Starting');
         const fnToCall = () => {
             fn(arr[i], () => {
                 if (arr.length - 1 > i) {
-                    loopName && console.log(loopName, ': Next');
                     looper(arr, fn, whenDoneFn, loopName, delay, initialDelay, i + 1);
                 } else {
                     whenDoneFn();
