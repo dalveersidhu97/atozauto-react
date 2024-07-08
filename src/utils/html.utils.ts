@@ -17,7 +17,7 @@ export class InjectorQueue {
 
     private static next() {
         let delaySum = InjectorQueue.busyTill - Date.now();
-        if(delaySum<0) delaySum = 0;
+        if (delaySum < 0) delaySum = 0;
         while (InjectorQueue.injectors.length > 0) {
             const nextInjector = InjectorQueue.injectors.shift();
             if (nextInjector) {
@@ -63,18 +63,23 @@ export const removeInfoBox = () => {
     document.getElementById('azauto-info-box')?.remove();
 }
 
-export const createInfoBoxWithHTML = (html: string) => {
-    const container = document.getElementById('azauto-info-box-container');
-    if (container) {
-        container.innerHTML = html;
-        return;
-    }
-    const innerHTML = `
-        <div id="azauto-info-box-container">
-            ${html}
-        </div>
-    `;
-    injectInfoToPage(innerHTML);
+export const createInfoBoxWithHTML = (html: string, stay?: boolean) => {
+    const element = document.createElement('div');
+    element.classList.add('azauto-info-box-container');
+    element.innerHTML = html;
+    injectInfoToPage('', (infoBox) => {
+        if (infoBox.children.length) {
+            infoBox.insertBefore(element, infoBox.children[0]);
+        } else {
+            infoBox.appendChild(element)
+        }
+    });
+    !stay && setTimeout(()=>{
+        element.classList.add('fade-out');
+        setTimeout(() => {
+            element.remove();
+        }, 1500);
+    }, 1500);
 }
 
 export const createReloadingInfoHTML = (formattedScheduleTime: string, delaySeconds: number) => {
@@ -87,19 +92,22 @@ export const createReloadingInfoHTML = (formattedScheduleTime: string, delaySeco
         return;
     }
     createInfoBoxWithHTML(`
-        <div id="azauto-info-title">Reloading</div>
+        <div id="azauto-info-title">Reloading...</div>
         <div>${formattedScheduleTime}</div>
         <div id="azauto-timer-text">${delayStr}</div>
-    `);
+    `, true);
 }
 export const getInfoBoxElement = () => document.getElementById('azauto-info-box');
-export const injectInfoToPage = (html: string) => {
+export const injectInfoToPage = (html: string, callBack?: (element: HTMLElement) => void) => {
     const id = 'azauto-info-box';
     let infoBox = document.getElementById(id);
     const defaultTop = '20rem';
     const defaultLeft = '.5rem';
-    if (infoBox)
-        return infoBox.innerHTML = html;
+    if (infoBox) {
+        if (html) infoBox.innerHTML = html;
+        !!callBack && callBack(infoBox);
+        return;
+    }
     const createInfoBox = (top: string, left: string) => {
         infoBox = document.createElement('div');
         infoBox.style.top = top;
@@ -107,8 +115,7 @@ export const injectInfoToPage = (html: string) => {
         infoBox.id = id;
         infoBox.classList.add('azauto-info-box');
         document.body.appendChild(infoBox);
-        console.log('Created InfoBox', infoBox)
-        infoBox.innerHTML = html;
+        if (html) infoBox.innerHTML = html;
         return infoBox;
     }
     chrome.storage.local.get(StorageKeys.infoBoxPos, (result) => {
@@ -129,6 +136,7 @@ export const injectInfoToPage = (html: string) => {
         infoBox.addEventListener('touchstart', onMouseDown, { passive: false });
         infoBox.addEventListener('touchmove', onMouseMove, { passive: false });
         infoBox.addEventListener('touchend', onMouseUp, { passive: false });
+        !!callBack && callBack(infoBox);
     })
 }
 

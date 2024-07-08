@@ -87,7 +87,7 @@ const acceptVET = (vet: VETType, isTestMode: boolean, callBack: (vetAccepted?: b
 }
 
 const waitForLoadingOver = (callBack: () => void) => {
-    console.log('Waiting for vets Loading to Over.')
+    // console.log('Waiting for vets Loading to Over.')
     let counter = 0;
     const intervalMillis = 500;
     const maxWaitMillis = 5000;
@@ -101,20 +101,27 @@ const waitForLoadingOver = (callBack: () => void) => {
         }
         let loadingDone = false;
         const presentation = document.querySelector('div[role="presentation"]');
-        if (!presentation) return callBack();
+        if (!presentation) {
+            // console.log('VET: NO Presentation exists');
+            return callBack()
+        };
         const rows = presentation.children;
         if (rows.length === 3) {
             const thirdRow = rows[2];
             const vets = getVetsFromContext(thirdRow, { isTestMode: true });
             if (vets.length > 0) {
-                console.log('VETs Loaded');
+                // console.log('VETs Loaded');
                 loadingDone = true;
             } else {
                 const firstListItem = thirdRow.querySelector('div[role="listitem"]');
                 if (firstListItem) {
+                    // console.log('VET: firstListItem exists');
                     const textDiv = firstListItem.querySelector('div[data-test-component="StencilText"]');
                     if (!!textDiv) {
-                        loadingDone = !(textDiv.textContent || '').includes('There aren’t any available shifts.');
+                        const textContent = (textDiv.textContent || '');
+                        // console.log('VET: ', textContent);
+                        const availableShiftsPattren = /There are \d+ available shifts\./;
+                        loadingDone = !textContent.includes('There aren’t any available shifts.') && !availableShiftsPattren.test(textContent);
                         // console.log(textDiv.innerText);
                     }
                 }
@@ -244,11 +251,10 @@ const main = (preference: PreferenceType) => {
         console.log('vetFilters', filters);
         const { selectableDates, preSelectedDate, nextPreSelectedDate } = prepareSelectableFilterDates(filters);
         looper(selectableDates, (date, callBack, index) => {
-            const notWaitForLoading = date === preSelectedDate || index === selectableDates.length - 1;
-            const shouldNotScroll = index === 0 || (index === selectableDates.length - 1 && selectableDates.length === 2)
+            const notWaitForLoading = date === preSelectedDate;
             selectDay(date, () => {
                 acceptAllAcceptables(filters, callBack, { isTestMode })
-            }, !notWaitForLoading, !shouldNotScroll, isTestMode);
+            }, !notWaitForLoading, true, isTestMode);
         }, () => {
             selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);
             finalCallBack(filters, preference);
