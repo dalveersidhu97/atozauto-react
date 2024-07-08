@@ -1,7 +1,7 @@
 import { StorageKeys } from "../constants";
 import { PreferenceType } from "../types";
 import { setUserInfo } from "../utils/content.utils";
-import { InjectorQueue, injectReloadingInfoBoxMillis, injectTextBoxToPage, removeInfoBox } from "../utils/html.utils";
+import { createInfoBoxWithHTML, InjectorQueue, injectReloadingInfoBoxMillis, removeInfoBox } from "../utils/html.utils";
 
 const loaded = () => {
     const h1 = document.querySelector('h1[data-test-component="StencilH1"]');
@@ -22,7 +22,7 @@ export const startMain = (main: (preference: PreferenceType) => void) => {
         chrome.storage.local.get(StorageKeys.preference, function (result) {
             const preference = result.preference || {};
             if (preference.refreshMode !== 'Off') {
-                InjectorQueue.add(()=>injectTextBoxToPage('Loading...'));
+                InjectorQueue.add(()=>createInfoBoxWithHTML('Loading...'));
                 const reloadingInMillis = 10*1000;
                 noResponseReloadTimeout = setTimeout(() => {
                     window.location.reload();
@@ -48,7 +48,7 @@ export const startMain = (main: (preference: PreferenceType) => void) => {
 
     const inverval = setInterval(() => {
         if (loaded()) {
-            removeInfoBox();
+            InjectorQueue.add(removeInfoBox);
             !!noResponseReloadTimeout && clearTimeout(noResponseReloadTimeout);
             clearInterval(inverval);
             chrome.storage.local.get(StorageKeys.preference, function (result) {

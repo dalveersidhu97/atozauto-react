@@ -3,7 +3,7 @@ import { FilterType, PreferenceType, VTOType } from "../types";
 import { deepEqualObjects } from "../utils/comparison.utils";
 import { closeModal, finalCallBack, getUserInfo, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins } from "../utils/formatters";
-import { InjectorQueue, injectTextBoxToPage, removeInfoBox } from "../utils/html.utils";
+import { createInfoBoxWithHTML, InjectorQueue, removeInfoBox } from "../utils/html.utils";
 import { startMain } from "./init.content";
 
 const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
@@ -87,12 +87,12 @@ const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, 
     console.log('Acceptable VTOs', { acceptables });
     const acceptablesSortedAsFilters = sortArray(acceptables, filters);
     console.log('Acceptable Sorted As Filters VTOs', { acceptablesSortedAsFilters });
-    const injector = () => injectTextBoxToPage(`${acceptablesSortedAsFilters.length} Acceptable VTOs`);
+    const injector = () => createInfoBoxWithHTML(`${acceptablesSortedAsFilters.length} Acceptable VTOs`);
     InjectorQueue.add(injector);
     looper(acceptablesSortedAsFilters, (acceptable, callBack, index) => {
         const vto = acceptable.vto;
         const filter = acceptable.filter;
-        const injector = () => injectTextBoxToPage(`Accepting VTO...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
+        const injector = () => createInfoBoxWithHTML(`Accepting VTO...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
         InjectorQueue.add(injector);
         acceptVTO(vto, isTestMode, () => {
             !isTestMode && removeFilter(StorageKeys.vtoFilters, filter);

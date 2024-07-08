@@ -1,7 +1,7 @@
 import { StorageKeys, defaultPreference } from "../constants";
 import { FilterType, PreferenceType, TimeOps, VETType, VTOType } from "../types";
 import { deepEqualObjects } from "./comparison.utils";
-import { InjectorQueue, createReloadingInfoHTML, injectInfoToPage, injectReloadingInfoBox } from "./html.utils";
+import { InjectorQueue, createReloadingInfoHTML, injectInfoToPage, injectReloadingInfoBox, removeInfoBox } from "./html.utils";
 
 export function contains(context: Element, selector: string, text: RegExp | string) {
     var elements = context.querySelectorAll(selector);
@@ -237,9 +237,13 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
     const secheduledDate = new Date();
     const now = new Date();
     const refreshMode = preference.refreshMode; // Smart | Full Speed
-    if (!filters.length || refreshMode === "Off") return;
-    if (refreshMode === 'Full Speed')
+    if (!filters.length || refreshMode === "Off") {
+        return InjectorQueue.add(removeInfoBox);
+    };
+    if (refreshMode === 'Full Speed'){
+        InjectorQueue.add(removeInfoBox);
         return window.location.reload();
+    }
 
     const currentMins = now.getMinutes();
     const currentSeconds = now.getSeconds();

@@ -1,53 +1,36 @@
 import { StorageKeys } from "../constants";
-
-type Injector = () => void;
+type InjectorFn = () => void;
+type Injector = { injectorFn: InjectorFn, delay: number, delayNext: number };
 
 export class InjectorQueue {
+    private static NEXT_DELAY = 500;
     private static injectors: Injector[] = [];
-    private static interval: NodeJS.Timeout | undefined = undefined;
-    private static delay = 500;
-    private static isIntervalActive = false;
+    private static busyTill: number = Date.now();
 
     private constructor() { }
 
-    public static add(injector: Injector) {
+    public static add(injectorFn: InjectorFn, delayMillis: number = 0, delayMillisNext: number = InjectorQueue.NEXT_DELAY) {
+        const injector = { injectorFn, delay: delayMillis, delayNext: delayMillisNext };
         InjectorQueue.injectors.push(injector);
-        if (!InjectorQueue.isIntervalActive) {
-            InjectorQueue.startInterval();
+        InjectorQueue.next();
+    }
+
+    private static next() {
+        let delaySum = InjectorQueue.busyTill - Date.now();
+        if(delaySum<0) delaySum = 0;
+        while (InjectorQueue.injectors.length > 0) {
+            const nextInjector = InjectorQueue.injectors.shift();
+            if (nextInjector) {
+                const { injectorFn, delay, delayNext } = nextInjector;
+                delaySum += delay;
+                setTimeout(() => {
+                    injectorFn();
+                }, delaySum);
+                delaySum += delayNext; // Add delayNext for the next injector
+            }
         }
+        InjectorQueue.busyTill = Date.now() + delaySum;
     }
-
-    public static clear() {
-        InjectorQueue.injectors = []; // Clear injectors array
-        InjectorQueue.stopInterval();
-    }
-
-    private static startInterval() {
-        if (InjectorQueue.injectors.length === 0) {
-            InjectorQueue.isIntervalActive = false;
-            return;
-        }
-
-        const nextInjector = InjectorQueue.injectors[0];
-
-        InjectorQueue.isIntervalActive = true;
-        nextInjector(); // Execute the next injector
-        InjectorQueue.injectors.shift(); // Remove the first injector from the array
-
-        InjectorQueue.interval = setTimeout(() => {
-            InjectorQueue.startInterval();
-        }, InjectorQueue.delay);
-    }
-
-    private static stopInterval() {
-        clearTimeout(InjectorQueue.interval);
-        InjectorQueue.isIntervalActive = false;
-    }
-}
-
-
-export const injectTextBoxToPage = (text: string) => {
-    injectInfoToPage(createInfoBoxHTML(text))
 }
 
 export const injectReloadingInfoBoxMillis = (millisInReload: number) => {
@@ -68,11 +51,11 @@ export const injectReloadingInfoBox = (secheduledDate: Date) => {
         second: '2-digit',
         hour12: true
     });
-    injectInfoToPage(createReloadingInfoHTML(formattedScheduleTime, Math.round(reloadingIn)));
+    createReloadingInfoHTML(formattedScheduleTime, Math.round(reloadingIn));
     setInterval(() => {
         let reloadingIn = ((secheduledDate!.getTime() - new Date().getTime()) / 1000);
         if (reloadingIn < 0) reloadingIn = 0;
-        injectInfoToPage(createReloadingInfoHTML(formattedScheduleTime, Math.round(reloadingIn)));
+        createReloadingInfoHTML(formattedScheduleTime, Math.round(reloadingIn));
     }, 1000);
 }
 
@@ -80,79 +63,84 @@ export const removeInfoBox = () => {
     document.getElementById('azauto-info-box')?.remove();
 }
 
-export const createInfoBoxHTML = (html: string) => {
-    return `
+export const createInfoBoxWithHTML = (html: string) => {
+    const container = document.getElementById('azauto-info-box-container');
+    if (container) {
+        container.innerHTML = html;
+        return;
+    }
+    const innerHTML = `
         <div id="azauto-info-box-container">
             ${html}
         </div>
     `;
+    injectInfoToPage(innerHTML);
 }
 
 export const createReloadingInfoHTML = (formattedScheduleTime: string, delaySeconds: number) => {
     const delaySecs = delaySeconds % 60;
     const delyMins = (delaySeconds - delaySecs) / 60;
     const delayStr = delaySeconds <= 60 ? `${delaySeconds}s` : `${delyMins}m ${delaySecs % 60}s`;
-    return createInfoBoxHTML(`
+    const timerTextElement = document.getElementById('azauto-timer-text');
+    if (timerTextElement) {
+        timerTextElement.innerText = delayStr;
+        return;
+    }
+    createInfoBoxWithHTML(`
         <div id="azauto-info-title">Reloading</div>
         <div>${formattedScheduleTime}</div>
-        <div>${delayStr}</div>
+        <div id="azauto-timer-text">${delayStr}</div>
     `);
 }
-
+export const getInfoBoxElement = () => document.getElementById('azauto-info-box');
 export const injectInfoToPage = (html: string) => {
     const id = 'azauto-info-box';
     let infoBox = document.getElementById(id);
     const defaultTop = '20rem';
     const defaultLeft = '.5rem';
+    if (infoBox)
+        return infoBox.innerHTML = html;
+    const createInfoBox = (top: string, left: string) => {
+        infoBox = document.createElement('div');
+        infoBox.style.top = top;
+        infoBox.style.left = left;
+        infoBox.id = id;
+        infoBox.classList.add('azauto-info-box');
+        document.body.appendChild(infoBox);
+        console.log('Created InfoBox', infoBox)
+        infoBox.innerHTML = html;
+        return infoBox;
+    }
     chrome.storage.local.get(StorageKeys.infoBoxPos, (result) => {
         const pos: { top: string, left: string } = result[StorageKeys.infoBoxPos] || { top: defaultTop, lef: defaultLeft };
         let timeout: NodeJS.Timeout;
         const onMove = (pos: { top: number, left: number }) => {
             if (timeout) clearTimeout(timeout);
             timeout = setTimeout(() => {
-                // save position
                 chrome.storage.local.set({ [StorageKeys.infoBoxPos]: { top: pos.top + 'px', left: pos.left + 'px' } });
             }, 100);
         }
+        const infoBox = createInfoBox(pos.top, pos.left);
 
-        if (!infoBox) { // create info box if does not exist
-            removeInfoBox();
-            const { onMouseDown, onMouseMove, onMouseUp, onMouseMoveThrottled } = createDraggableListeners(id, onMove);
-            infoBox = document.createElement('div');
-            infoBox.style.top = pos.top;
-            infoBox.style.left = pos.left;
-            infoBox.id = 'azauto-info-box';
-            infoBox.classList.add('azauto-info-box');
-            document.body.appendChild(infoBox);
-            infoBox.onmousedown = onMouseDown;
-            document.onmousemove = onMouseMove;
-            document.onmouseup = onMouseUp;
-
-            infoBox.addEventListener('touchstart', (e) => {
-                onMouseDown(e);
-                document.addEventListener('touchmove', onMouseMoveThrottled, { passive: false });
-                const touchEndListener = (e: TouchEvent) => {
-                    document.removeEventListener('touchmove', onMouseMoveThrottled);
-                    onMouseUp(e);
-                    document.removeEventListener('touchend', touchEndListener);
-                };
-                document.addEventListener('touchend', touchEndListener);
-            }, { passive: false });
-        }
-        infoBox.innerHTML = html;
+        const { onMouseDown, onMouseMove, onMouseUp } = createDraggableListeners(id, onMove);
+        infoBox.onmousedown = onMouseDown;
+        document.onmousemove = onMouseMove;
+        document.onmouseup = onMouseUp;
+        infoBox.addEventListener('touchstart', onMouseDown, { passive: false });
+        infoBox.addEventListener('touchmove', onMouseMove, { passive: false });
+        infoBox.addEventListener('touchend', onMouseUp, { passive: false });
     })
 }
 
 export const createDraggableListeners = (id: string, callback: (a: { top: number, left: number }) => void) => {
     let offsetX: number, offsetY: number;
     let isDragging = false;
-    let rafPending = false;
 
     function onMouseDown(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
-        isDragging = true;
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
+        event.preventDefault();
+        isDragging = true;
         if (event instanceof MouseEvent) {
             offsetX = event.clientX - draggableElement.getBoundingClientRect().left;
             offsetY = event.clientY - draggableElement.getBoundingClientRect().top;
@@ -162,9 +150,9 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
         }
     }
     function onMouseMove(event: MouseEvent | TouchEvent) {
-        event.preventDefault();
         const draggableElement = document.getElementById(id);
         if (!draggableElement) return;
+        event.preventDefault();
 
         const maxTop = window.innerHeight - draggableElement.offsetHeight;
         const maxLeft = window.innerWidth - draggableElement.offsetWidth;
@@ -186,18 +174,9 @@ export const createDraggableListeners = (id: string, callback: (a: { top: number
             callback({ top, left });
         }
     }
-    function onMouseMoveThrottled(event: TouchEvent) {
-        if (!rafPending) {
-            rafPending = true;
-            requestAnimationFrame(() => {
-                onMouseMove(event);
-                rafPending = false;
-            });
-        }
-    }
     function onMouseUp(event: MouseEvent | TouchEvent) {
         event.preventDefault();
         isDragging = false;
     }
-    return { onMouseDown, onMouseMove, onMouseUp, onMouseMoveThrottled };
+    return { onMouseDown, onMouseMove, onMouseUp };
 }

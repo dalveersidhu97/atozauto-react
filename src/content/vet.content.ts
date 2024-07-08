@@ -1,9 +1,8 @@
 import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VETType } from "../types";
-import { deepEqualObjects } from "../utils/comparison.utils";
 import { closeModal, finalCallBack, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
-import { InjectorQueue, injectTextBoxToPage, removeInfoBox } from "../utils/html.utils";
+import { createInfoBoxWithHTML, InjectorQueue } from "../utils/html.utils";
 import { startMain } from "./init.content";
 import { extractDateFromVetHeader } from "./vet.utils";
 
@@ -199,14 +198,14 @@ const acceptAllAcceptables = (filters: FilterType[], callBackOuter: () => void, 
     console.log('Acceptable VETS', { acceptables });
     let acceptablesSortedAsFilters = sortArray(acceptables, filters);
     console.log('Acceptable Sorted As Filters VETS', { acceptablesSortedAsFilters });
-    const injector = () => injectTextBoxToPage(`${acceptablesSortedAsFilters.length} Acceptable VETs`);
+    const injector = () => createInfoBoxWithHTML(`${acceptablesSortedAsFilters.length} Acceptable VETs`);
     InjectorQueue.add(injector);
 
     looper(acceptablesSortedAsFilters, (acceptable: Acceptable, callBack, index) => {
         const vet = acceptable.vet;
         const filter = acceptable.filter;
 
-        const injector = () => injectTextBoxToPage(`Accepting VET...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
+        const injector = () => createInfoBoxWithHTML(`Accepting VET...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
         InjectorQueue.add(injector);
         
         acceptVET(vet, isTestMode, (vetAccepted) => {
@@ -244,7 +243,6 @@ const main = (preference: PreferenceType) => {
         const filters = result.vetFilters || [];
         console.log('vetFilters', filters);
         const { selectableDates, preSelectedDate, nextPreSelectedDate } = prepareSelectableFilterDates(filters);
-        
         looper(selectableDates, (date, callBack, index) => {
             const notWaitForLoading = date === preSelectedDate || index === selectableDates.length - 1;
             const shouldNotScroll = index === 0 || (index === selectableDates.length - 1 && selectableDates.length === 2)
@@ -253,7 +251,6 @@ const main = (preference: PreferenceType) => {
             }, !notWaitForLoading, !shouldNotScroll, isTestMode);
         }, () => {
             selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);
-            removeInfoBox();
             finalCallBack(filters, preference);
         }, 'SelectDayLooper', 0, 0)
     });
