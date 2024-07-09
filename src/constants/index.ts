@@ -18,7 +18,8 @@ export const defaultPreference: PreferenceType = {
     testMode: 'Off',
 }
 export const defaultUIPreference: UIPreferenceType = {
-    smartModeCollapsed: false
+    smartModeCollapsed: false,
+    lastFilterType: 'VTO'
 }
 
 export const StorageKeys = {

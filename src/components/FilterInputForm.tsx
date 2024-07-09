@@ -3,9 +3,10 @@ import { adjustIntMinsForMinimumValue, formatDate, formatDateForInput, getCurren
 import { Button, Datepicker, Dropdown, TextInput } from "flowbite-react";
 import { IoIosArrowDown } from "react-icons/io";
 import { FilterType } from "../types";
-import { TimeOperators } from "../constants";
+import { defaultPreference, defaultUIPreference, TimeOperators } from "../constants";
 import { useUserInfo } from "../hooks/useUserInfo";
 import { datesAreOnSameDay } from "../utils/comparison.utils";
+import { useUIPreference } from "../hooks/useUIPreference";
 
 const TimeInput: FC<{ defaultValue?: number, min?: number, max?: number, onChange: (intMinutes: number, timeStr: string) => any }> = ({ defaultValue, onChange, min, max }) => {
     const inputIdPrefix = useId();
@@ -51,6 +52,10 @@ const Select: FC<{ options: { key: string, label: string }[], selectedKey: strin
 type CreateFilterFn = (filter: FilterType) => any;
 export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVETFilter: CreateFilterFn }> = ({ onCreateVETFilter, onCreateVTOFilter }) => {
 
+    const { UIPreference, setUIPreference } = useUIPreference();
+
+    const filterType = UIPreference.lastFilterType || defaultUIPreference.lastFilterType;
+    const setFilterType = (fType: 'VTO'|'VET') => setUIPreference(()=>({ lastFilterType: fType }))
     const [startTimeMins, setStartTimeMins] = useState<number>(80);
     const [endTimeMins, setEndTimeMins] = useState<number>(710);
     const [date, setDate] = useState(new Date());
@@ -58,7 +63,6 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const [forName, setForName] = useState('');
     const [startTimeOp, setStartTimeOp] = useState('eq');
     const [endTimeOp, setEndTimeOp] = useState('eq');
-    const [filterType, setFilterType] = useState<'VTO'|'VET'>('VTO');
 
     useEffect(() => {
         if (userInfo?.name)
@@ -69,14 +73,14 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         if (startTimeMins === undefined || endTimeMins === undefined) return;
         const startTime = startTimeMins;
         const endTime = adjustIntMinsForMinimumValue(endTimeMins, startTime);
-        
+
         const filter: FilterType = {
             startTime: { [startTimeOp]: startTime },
             endTime: { [endTimeOp]: endTime },
             date: formatDate(date),
             forName: forName.trim()
         }
-        const createFilter = filterType==='VTO'?onCreateVTOFilter:onCreateVETFilter;
+        const createFilter = filterType === 'VTO' ? onCreateVTOFilter : onCreateVETFilter;
         createFilter(filter);
     }
 
@@ -88,20 +92,20 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const operators = TimeOperators;
     const today = new Date();
     const tomorrow = new Date();
-    tomorrow.setDate(today.getDate()+1);
+    tomorrow.setDate(today.getDate() + 1);
 
     return <>
         <TextInput id="firstName" value={forName} onChange={({ target: { value } }) => setForName(value.trim())} placeholder="First Name" addon="&nbsp;For&nbsp;" />
         <div className="grid grid-cols-2 gap-2">
-            <Button outline={filterType==='VTO'} color={'gray'} onClick={()=>{setFilterType('VTO')}}>VTO</Button>
-            <Button outline={filterType==='VET'} color={'gray'} onClick={()=>{setFilterType('VET')}}>VET</Button>
+            <Button outline={filterType === 'VTO'} color={'gray'} onClick={() => { setFilterType('VTO') }}>VTO</Button>
+            <Button outline={filterType === 'VET'} color={'gray'} onClick={() => { setFilterType('VET') }}>VET</Button>
         </div>
         <div className="grid grid-cols-3 gap-2">
             <Datepicker minDate={new Date()} value={formatDateForInput(date)} onSelectedDateChanged={onChangeDateInput} />
-            <Button outline={datesAreOnSameDay(date, today)} color={'gray'} onClick={()=>setDate(new Date())}>Today</Button>
-            <Button outline={datesAreOnSameDay(date, tomorrow)} color={'gray'} onClick={()=>{
+            <Button outline={datesAreOnSameDay(date, today)} color={'gray'} onClick={() => setDate(new Date())}>Today</Button>
+            <Button outline={datesAreOnSameDay(date, tomorrow)} color={'gray'} onClick={() => {
                 const d = new Date();
-                d.setDate(d.getDate()+1);
+                d.setDate(d.getDate() + 1);
                 setDate(d);
             }}>Tomorrow</Button>
         </div>
