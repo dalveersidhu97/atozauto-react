@@ -106,19 +106,19 @@ export const Preference: FC = () => {
             >
                 {!smartModeCollapsed && "Smart mode settings"}
                 {!!smartModeCollapsed && <div className="flex gap-4 justify-between min-w-max text-xs">
-                    <div className="flex flex-col justify-center self-stretch">
+                    <div className="flex flex-col justify-center gap-0.5">
                         <Label className="text-xs">Multiplier</Label>
                         <div className="text-gray-400">{p.hotMinutesMultiplier} Minutes</div>
                     </div>
-                    <div className="flex flex-col justify-center">
+                    <div className="flex flex-col justify-center gap-0.5">
                         <Label className="text-xs">Hor First</Label>
                         <div className="text-gray-400">{p.hotSecondsLessThan} Seconds</div>
                     </div>
-                    <div className="flex flex-col justify-center">
+                    <div className="flex flex-col justify-center gap-0.5">
                         <Label className="text-xs">For Every</Label>
                         <div className="text-gray-400">{p.secondsIncrementBy} Seconds</div>
                     </div>
-                    <div className="flex flex-col justify-center">
+                    <div className="flex flex-col justify-center gap-0.5">
                         <Label className="text-xs">Refresh every</Label>
                         <div className="text-gray-400">{p.minutesIncrementBy} Minutes</div>
                     </div>
