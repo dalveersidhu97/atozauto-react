@@ -102,8 +102,7 @@ export const Preference: FC = () => {
         <Accordion.Panel>
             <Accordion.Title
                 onClick={toggleSmartModeCollapse}
-                style={{ padding: smartModeCollapsed?'.75rem': '1rem'}}
-                className="text-sm w-full"
+                className="text-sm !p-4 w-full"
             >
                 {!smartModeCollapsed && "Smart mode settings"}
                 {!!smartModeCollapsed && <div className="flex gap-4 justify-between min-w-max text-xs">
