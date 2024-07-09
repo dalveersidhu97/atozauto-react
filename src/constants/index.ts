@@ -1,3 +1,4 @@
+import { UIPreferenceType } from "../hooks/useUIPreference"
 import { PreferenceType } from "../types"
 
 export const TimeOperators = [
@@ -16,7 +17,7 @@ export const defaultPreference: PreferenceType = {
     refreshMode: 'Smart',
     testMode: 'Off',
 }
-export const defaultUIPreference = {
+export const defaultUIPreference: UIPreferenceType = {
     smartModeCollapsed: false
 }
 

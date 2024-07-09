@@ -2,19 +2,23 @@ import { useState } from "react"
 import { useChromeLocalStorage } from "./useChromeLocalStorage";
 import { StorageKeys, defaultUIPreference } from "../constants";
 
-type UIPreferenceType = typeof defaultUIPreference;
+export type UIPreferenceType = { smartModeCollapsed: boolean };
 
 export const useUIPreference = () => {
-    const state = useState<UIPreferenceType>();
+    const [state, setState] = useState<Partial<UIPreferenceType>>({});
     const storage = useChromeLocalStorage({
         key: StorageKeys.uiPreference, getter: (pref: UIPreferenceType | undefined) => {
-            state[1](pref || defaultUIPreference)
+            setState(pref || defaultUIPreference)
         }
     });
 
-    const setUIPreference = (setter: (oldPref?: UIPreferenceType)=>UIPreferenceType) => {
-        storage.set(setter, (newPref)=>state[1](newPref))
+    const setUIPreference = (setter: (oldPref?: UIPreferenceType) => UIPreferenceType) => {
+        const newSetter = (oldPref?: UIPreferenceType) => {
+            const newPref = setter(oldPref);
+            return { ...oldPref, ...newPref }
+        }
+        storage.set(newSetter, (newPref) => setState({ ...newPref }))
     }
 
-    return [state[0], setUIPreference];
+    return { UIPreference: state, setUIPreference };
 }

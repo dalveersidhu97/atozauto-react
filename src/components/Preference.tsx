@@ -72,7 +72,8 @@ export const Preference: FC = () => {
     const testModeOptions = [{ label: 'Off', value: 'Off' }, { label: 'On', value: 'On' }]
     const [preference, setPreferenceState] = useState<PreferenceType>(defaultPreference);
     const p = preference;
-    // const [UIPreference, setUIPreference] = useUIPreference();
+    const { UIPreference, setUIPreference } = useUIPreference();
+    const smartModeCollapsed = UIPreference?.smartModeCollapsed;
 
     const { set } = useChromeLocalStorage<PreferenceType>({
         key: StorageKeys.preference,
@@ -94,6 +95,54 @@ export const Preference: FC = () => {
     }, [preference]);
 
     const hotMinsMultDesc = `Hot Mins: ${[0, 1, 2, 3, 4, 5, 6, 7, 8].map(v => v * p.hotMinutesMultiplier).filter(v => v < 61).map(v => ':' + padWithZero(v)).join(',')}`;
+    const toggleSmartModeCollapse = ()=>{
+        setUIPreference(oldPref => ({ smartModeCollapsed: !oldPref?.smartModeCollapsed }))
+    }
+    const SmartModeSettings = () => <Accordion theme={accordianTheme} collapseAll={smartModeCollapsed}>
+        <Accordion.Panel>
+            <Accordion.Title
+                onClick={toggleSmartModeCollapse}
+                style={{ padding: smartModeCollapsed?'.75rem': '1rem'}}
+                className="text-sm w-full"
+            >
+                {!smartModeCollapsed && "Smart mode settings"}
+                {!!smartModeCollapsed && <div className="flex gap-4 justify-between min-w-max text-xs">
+                    <div className="flex flex-col justify-center self-stretch">
+                        <Label className="text-xs">Multiplier</Label>
+                        <div className="text-gray-400">{p.hotMinutesMultiplier} Minutes</div>
+                    </div>
+                    <div className="flex flex-col justify-center">
+                        <Label className="text-xs">Hor First</Label>
+                        <div className="text-gray-400">{p.hotSecondsLessThan} Seconds</div>
+                    </div>
+                    <div className="flex flex-col justify-center">
+                        <Label className="text-xs">For Every</Label>
+                        <div className="text-gray-400">{p.secondsIncrementBy} Seconds</div>
+                    </div>
+                    <div className="flex flex-col justify-center">
+                        <Label className="text-xs">Refresh every</Label>
+                        <div className="text-gray-400">{p.minutesIncrementBy} Minutes</div>
+                    </div>
+                </div>}
+            </Accordion.Title>
+            <Accordion.Content>
+                <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                    <div className="flex flex-col gap-2">
+                        <NumberInput min={1} max={60} label="Hot Minutes Multiplier " unit="Minutes" desc={hotMinsMultDesc} value={p.hotMinutesMultiplier} onChange={(val) => setPreference({ hotMinutesMultiplier: val })} />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <NumberInput min={1} max={60} label="Refresh for first " unit="Seconds" desc={`When its a hot minute`} value={p.hotSecondsLessThan} onChange={(val) => setPreference({ hotSecondsLessThan: val })} />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <NumberInput min={0} max={59} label="Refresh after every" unit="Seconds" desc="When its a hot minute" value={p.secondsIncrementBy} onChange={(val) => setPreference({ secondsIncrementBy: val })} />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <NumberInput min={1} max={60} label="Refresh after every " unit="Minutes" desc="After hot minute is over" value={p.minutesIncrementBy} onChange={(val) => setPreference({ minutesIncrementBy: val })} />
+                    </div>
+                </div>
+            </Accordion.Content>
+        </Accordion.Panel>
+    </Accordion>
 
     return <>
         <div className="flex flex-col gap-4">
@@ -117,44 +166,7 @@ export const Preference: FC = () => {
                         options={refreshModeOptions}
                     />
                 </div>
-                {p.refreshMode === 'Smart' && <Accordion theme={accordianTheme}>
-                    <Accordion.Panel>
-                        <Accordion.Title className="text-sm !p-4">Smart mode settings</Accordion.Title>
-                        <Accordion.Content>
-                            <div className="grid grid-cols-2 gap-y-4 gap-x-2">
-                                <div className="flex flex-col gap-2">
-                                    <NumberInput min={1} max={60} label="Hot Minutes Multiplier " unit="Minutes" desc={hotMinsMultDesc} value={p.hotMinutesMultiplier} onChange={(val) => setPreference({ hotMinutesMultiplier: val })} />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <NumberInput min={1} max={60} label="Refresh for first " unit="Seconds" desc={`When its a hot minute`} value={p.hotSecondsLessThan} onChange={(val) => setPreference({ hotSecondsLessThan: val })} />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <NumberInput min={0} max={59} label="Refresh after every" unit="Seconds" desc="When its a hot minute" value={p.secondsIncrementBy} onChange={(val) => setPreference({ secondsIncrementBy: val })} />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <NumberInput min={1} max={60} label="Refresh after every " unit="Minutes" desc="After hot minute is over" value={p.minutesIncrementBy} onChange={(val) => setPreference({ minutesIncrementBy: val })} />
-                                </div>
-                            </div>
-                        </Accordion.Content>
-                    </Accordion.Panel>
-                </Accordion>}
-                {/* {p.refreshMode === 'Smart' && <div className="flex flex-col gap-4 border rounded-md p-4">
-                    <Label className="text-gray-500">Smart Mode Settings</Label>
-                    <div className="grid grid-cols-2 gap-y-4 gap-x-2">
-                        <div className="flex flex-col gap-2">
-                            <NumberInput min={1} max={60} label="Hot Minutes Multiplier " unit="Minutes" desc={hotMinsMultDesc} value={p.hotMinutesMultiplier} onChange={(val) => setPreference({ hotMinutesMultiplier: val })} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <NumberInput min={1} max={60} label="Refresh for first " unit="Seconds" desc={`When its a hot minute`} value={p.hotSecondsLessThan} onChange={(val) => setPreference({ hotSecondsLessThan: val })} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <NumberInput min={0} max={59} label="Refresh after every" unit="Seconds" desc="When its a hot minute" value={p.secondsIncrementBy} onChange={(val) => setPreference({ secondsIncrementBy: val })} />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <NumberInput min={1} max={60} label="Refresh after every " unit="Minutes" desc="After hot minute is over" value={p.minutesIncrementBy} onChange={(val) => setPreference({ minutesIncrementBy: val })} />
-                        </div>
-                    </div>
-                </div>} */}
+                {p.refreshMode === 'Smart' && <SmartModeSettings />}
             </div>
         </div>
     </>
