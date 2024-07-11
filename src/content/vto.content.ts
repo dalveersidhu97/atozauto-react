@@ -43,11 +43,11 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
 
 const acceptVTO = (vto: VTOType, isTestMode: boolean, callBack: () => void) => {
     console.log('Click VTO Button', vto);
+    vto.button.click();
     if (isTestMode) {
-        setTimeout(callBack, 2000);
+        setTimeout(() => closeModal(callBack), 1000);
         return;
     }
-    vto.button.click()
     setTimeout(() => {
         const btnFound = pressModalButton(/^Accept VTO$/i, () => {
             removeInfoBox();

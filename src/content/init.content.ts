@@ -4,10 +4,9 @@ import { setUserInfo } from "../utils/content.utils";
 import { createInfoBoxWithHTML, injectInfoToPage, InjectorQueue, injectReloadingInfoBoxMillis, removeInfoBox } from "../utils/html.utils";
 
 const loaded = () => {
-    const h1 = document.querySelector('h1[data-test-component="StencilH1"]');
-    if (!h1) return false;
-    const vtoSpinner = document.querySelector('svg[data-test-id="VtoLandingPage_Spinner"]');
-    if (!!vtoSpinner) {
+    let loadingSpinner = document.querySelector('svg[data-test-id="VtoLandingPage_Spinner"]');
+    if(!loadingSpinner) loadingSpinner = document.querySelector('svg[data-test-id="FindShiftsPageLoadingSpinner"]');
+    if (!!loadingSpinner) {
         return false;
     };
     console.log('LOADED')
