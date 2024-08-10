@@ -47,7 +47,7 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                                 {filter.timeRules.map((timeRule, j) => <Fragment key={'timeRule'+j}>
                                     <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{intMinsToTime12(timeRule.seconds || 0)}</span></div>
                                 </Fragment>)}
-                                <div className="text-gray-500">{minDuration > 0 && minDuration < maxDuration ? `${intMinsToString(minDuration)} - ` : ''}{intMinsToString(maxDuration)}</div>
+                                <div className="text-gray-500">{minDuration > 0 && minDuration < maxDuration ? `${intMinsToString(minDuration)} - ` : ''}{maxDuration > 0 && intMinsToString(maxDuration)}</div>
                             </div>
                             <div className="flex self-start">
                                 <Button onClick={() => onClickDelete(filter)} size={'xs'} color={'red'}>Delete</Button>
