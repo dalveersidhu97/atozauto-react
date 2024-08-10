@@ -1,9 +1,10 @@
-import React, { FC, useEffect, useId, useState } from "react";
+import React, { FC, Fragment, useEffect, useId, useState } from "react";
 import { adjustIntMinsForMinimumValue, formatDate, formatDateForInput, getCurrentTime, intMinsToTimeStr, moveObjectWithKeyToFront, timeStringToIntMins } from "../utils/formatters";
 import { Button, Datepicker, Dropdown, TextInput } from "flowbite-react";
 import { IoIosArrowDown } from "react-icons/io";
-import { FilterType } from "../types";
+import { FilterType, TimeOps, TimeRule } from "../types";
 import { defaultPreference, defaultUIPreference, TimeOperators } from "../constants";
+import { MdDeleteOutline } from "react-icons/md";
 import { useUserInfo } from "../hooks/useUserInfo";
 import { datesAreOnSameDay } from "../utils/comparison.utils";
 import { useUIPreference } from "../hooks/useUIPreference";
@@ -36,7 +37,7 @@ const Select: FC<{ options: { key: string, label: string }[], selectedKey: strin
     const inputIdPrefix = useId();
 
     return (
-        <Dropdown label={""} renderTrigger={() => <Button color={'gray'}>
+        <Dropdown label={""} renderTrigger={() => <Button color={'gray'} size={'xs'}>
             <div className="flex items-center justify-between gap-2 text-xs">
                 <span>{opts[0].label.toUpperCase()}</span>
                 <IoIosArrowDown />
@@ -55,14 +56,11 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const { UIPreference, setUIPreference } = useUIPreference();
 
     const filterType = UIPreference.lastFilterType || defaultUIPreference.lastFilterType;
-    const setFilterType = (fType: 'VTO'|'VET') => setUIPreference(()=>({ lastFilterType: fType }))
-    const [startTimeMins, setStartTimeMins] = useState<number>(80);
-    const [endTimeMins, setEndTimeMins] = useState<number>(710);
+    const setFilterType = (fType: 'VTO' | 'VET') => setUIPreference(() => ({ lastFilterType: fType }))
+    const [timeRules, setTimeRules] = useState<TimeRule[]>([{ op: 'eq', seconds: 80, type: 'Start Time' }, { op: 'eq', seconds: 710, type: 'End Time' }]);
     const [date, setDate] = useState(new Date());
     const [userInfo] = useUserInfo();
     const [forName, setForName] = useState('');
-    const [startTimeOp, setStartTimeOp] = useState('eq');
-    const [endTimeOp, setEndTimeOp] = useState('eq');
 
     useEffect(() => {
         if (userInfo?.name)
@@ -70,13 +68,17 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     }, [userInfo?.name]);
 
     const onClickCreatefilter = () => {
-        if (startTimeMins === undefined || endTimeMins === undefined) return;
-        const startTime = startTimeMins;
-        const endTime = adjustIntMinsForMinimumValue(endTimeMins, startTime);
-
+        if (!timeRules.length) return;
+        let maxStartTimeVal = 0;
+        timeRules.forEach(rule => {
+            if (rule.type === 'Start Time' && rule.seconds > maxStartTimeVal)
+                maxStartTimeVal = rule.seconds
+        })
         const filter: FilterType = {
-            startTime: { [startTimeOp]: startTime },
-            endTime: { [endTimeOp]: endTime },
+            timeRules: timeRules.map(rule => {
+                if (rule.type === 'Start Time') return rule;
+                return { ...rule, seconds: adjustIntMinsForMinimumValue(rule.seconds, maxStartTimeVal) }
+            }),
             date: formatDate(date),
             forName: forName.trim()
         }
@@ -84,12 +86,30 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         createFilter(filter);
     }
 
+    const onClickAddRule = () => {
+        setTimeRules(prevRules => {
+            const newRule: TimeRule = prevRules.length ? { ...prevRules[prevRules.length - 1] } : { op: 'eq', seconds: 0, type: 'Start Time' };
+            return [...prevRules, newRule];
+        })
+    }
+
+    const updateRuleAtIndex = (i: number, newRule: TimeRule) => {
+        setTimeRules(prevRules => {
+            return prevRules.map((rule, j) => i === j ? newRule : rule);
+        })
+    }
+
+    const deleteRuleAtIndex = (i: number) => {
+        setTimeRules(prevRules => {
+            return prevRules.filter((_r, j) => i !== j);
+        })
+    }
+
     const onChangeDateInput = (date: Date) => {
         if (!date) return;
         setDate(date);
     }
 
-    const operators = TimeOperators;
     const today = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
@@ -109,14 +129,19 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
                 setDate(d);
             }}>Tomorrow</Button>
         </div>
-        <div className="grid grid-cols-3 gap-2">
-            <Button color={'gray'}>Start Time</Button>
-            <Select options={operators} selectedKey={startTimeOp} onChange={(opKey) => setStartTimeOp(opKey)} />
-            <TimeInput onChange={(intMins) => setStartTimeMins(intMins)} defaultValue={startTimeMins} />
-            <Button color={'gray'}>End Time</Button>
-            <Select options={operators} selectedKey={endTimeOp} onChange={(opKey) => setEndTimeOp(opKey)} />
-            <TimeInput onChange={(intMins) => setEndTimeMins(intMins)} defaultValue={endTimeMins} />
+        <div className="grid grid-cols-[1fr_1fr_1fr_max-content] gap-2">
+            {timeRules.map((rule, i) => <Fragment key={'rule' + i + Math.random()}>
+                <Select
+                    options={[{ key: 'Start Time', label: 'Start Time' }, { key: 'End Time', label: 'End Time' }]}
+                    selectedKey={rule.type}
+                    onChange={(timeType) => updateRuleAtIndex(i, { ...rule, type: timeType as TimeRule['type'] })}
+                />
+                <Select options={TimeOperators} selectedKey={rule.op} onChange={(opKey) => updateRuleAtIndex(i, { ...rule, op: opKey as TimeOps })} />
+                <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, seconds: intMins })} defaultValue={rule.seconds} />
+                <button className="flex items-center justify-center" onClick={() => deleteRuleAtIndex(i)}><MdDeleteOutline className="w-6 h-6" /></button>
+            </Fragment>)}
         </div>
+        <Button color={'gray'} onClick={onClickAddRule}>Add Rule</Button>
         <Button onClick={onClickCreatefilter}>{`Add ${filterType} Filter`}</Button>
     </>
 }

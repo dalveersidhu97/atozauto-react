@@ -243,7 +243,7 @@ const main = (preference: PreferenceType) => {
                 acceptAllAcceptables(filters, date, callBack, { isTestMode })
             }, !notWaitForLoading, true, isTestMode);
         }, () => {
-            selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);
+            !!nextPreSelectedDate && selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);
             finalCallBack(filters, preference);
         }, 'SelectDayLooper', 0, 0)
     });

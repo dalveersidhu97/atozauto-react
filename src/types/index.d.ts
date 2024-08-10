@@ -1,9 +1,11 @@
 export type TimeOps = 'eq' | 'gt' | 'lt' | 'gte' | 'lte';
+
+export type TimeRule = { op: TimeOps, seconds: number, type: 'Start Time' | 'End Time' };
+
 export type FilterType = {
     date: string,
     forName: string,
-    startTime: { [key in TimeOps]?: number },
-    endTime: { [key in TimeOps]?: number },
+    timeRules: TimeRule[],
 }
 export type PreferenceType = {
     hotMinutesMultiplier: number,

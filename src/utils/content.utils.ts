@@ -152,15 +152,16 @@ export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
         return false;
     }
 
-    const startTimeOp = Object.keys(filter.startTime)[0] as TimeOps;
-    const startTime = filter.startTime[startTimeOp] as number;
-    const endTimeOp = Object.keys(filter.endTime)[0] as TimeOps;
-    const endTime = filter.endTime[endTimeOp] as number;
-
-    const isStartTimeValid = is(vto.startTime, startTimeOp, startTime);
-    const isEndTimeValid = is(vto.endTime, endTimeOp, endTime);
-    const isValid = isStartTimeValid && isEndTimeValid;
-    return isValid;
+    for (let index = 0; index < filter.timeRules.length; index++) {
+        const timeRule = filter.timeRules[index];
+        let valid = true;
+        if (timeRule.type === 'Start Time')
+            valid = is(vto.startTime, timeRule.op, timeRule.seconds);
+        else
+            valid = is(vto.endTime, timeRule.op, timeRule.seconds);
+        if (!valid) return false;
+    }
+    return true;
 }
 
 export const isVTOAcceptable = (vtoFilters: FilterType[], vto: VTOType) => {
@@ -234,7 +235,7 @@ export const finalCallBack = (filters: FilterType[], preference: PreferenceType)
     if (!filters.length || refreshMode === "Off") {
         return InjectorQueue.add(removeInfoBox);
     };
-    if (refreshMode === 'Full Speed'){
+    if (refreshMode === 'Full Speed') {
         InjectorQueue.add(removeInfoBox);
         return window.location.reload();
     }

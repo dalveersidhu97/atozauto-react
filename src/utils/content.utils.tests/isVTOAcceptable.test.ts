@@ -1,3 +1,4 @@
+import { FilterType } from "../../types";
 import * as contentUtils from "../content.utils";
 
 describe('isVTOAcceptable', () => {
@@ -15,16 +16,15 @@ describe('isVTOAcceptable', () => {
             "cycle": "SORT_1",
             "button": {}
         }
-        const filters = [
+        const filters: FilterType[] = [
             {
                 "date": "Jul 05, Fri",
-                "endTime": {
-                    "eq": 710
-                },
+                timeRules: [
+                    { type: 'Start Time', op: 'lt', seconds: 50 },
+                    { type: 'End Time', op: 'eq', seconds: 710 },
+                    { type: 'End Time', op: 'eq', seconds: 710 },
+                ],
                 "forName": "Dalveer",
-                "startTime": {
-                    "eq": 40
-                }
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);
@@ -40,16 +40,16 @@ describe('isVTOAcceptable', () => {
             "cycle": "SORT_1",
             "button": {}
         }
-        const filters = [
+        const filters: FilterType[] = [
             {
                 "date": "Jul 05, Fri",
-                "endTime": {
-                    "gte": 710
-                },
+                timeRules: [
+                    { type: 'Start Time', op: 'lte', seconds: 40 },
+                    { type: 'Start Time', op: 'lt', seconds: 50 },
+                    { type: 'End Time', op: 'gte', seconds: 710 },
+                    { type: 'End Time', op: 'gt', seconds: 700 },
+                ],
                 "forName": "Dalveer",
-                "startTime": {
-                    "lte": 40
-                }
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);

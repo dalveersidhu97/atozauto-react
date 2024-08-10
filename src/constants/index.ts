@@ -1,7 +1,7 @@
 import { UIPreferenceType } from "../hooks/useUIPreference"
-import { PreferenceType } from "../types"
+import { PreferenceType, TimeOps } from "../types"
 
-export const TimeOperators = [
+export const TimeOperators: { key: TimeOps, label: string }[] = [
     { key: 'eq', label: 'Equals' },
     { key: 'gt', label: 'After' },
     { key: 'lt', label: 'Before' },

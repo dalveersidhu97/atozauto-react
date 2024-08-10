@@ -4,22 +4,6 @@ import { TimeOperators } from "../constants";
 import { Badge, Button, Card } from "flowbite-react";
 import { intMinsToString, intMinsToTime12 } from "../utils/formatters";
 
-const getFilterKeyVal = (filter: FilterType['startTime']) => {
-    const keys = Object.keys(filter);
-    if (keys.length > 0) {
-        const key = keys[0];
-        const value = filter[key as keyof typeof filter];
-        const label = TimeOperators.find(op => op.key === key)?.label;
-        if (key === undefined || value === undefined || label === undefined) return {};
-        return {
-            key: keys[0],
-            value,
-            label
-        }
-    }
-    return {};
-}
-
 export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType) => any, filterType: string }> = ({ list, onDelete, filterType }) => {
     const keyPrefix = useId();
     const onClickDelete = (filter: FilterType) => {
@@ -29,9 +13,27 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
     return <>
         <div className="flex flex-col gap-4">
             {list.map((filter, index) => {
-                const startTimeOpVal = getFilterKeyVal(filter.startTime);
-                const endTimeOpVal = getFilterKeyVal(filter.endTime);
-                const duration = (endTimeOpVal.value || 0) - (startTimeOpVal.value || 0);
+                let maxStartTime = 0;
+                let minStartTime = Infinity;
+                let maxEndTime = 0;
+                let minEndTime = Infinity;
+
+                filter.timeRules.forEach(timeRule => {
+                    if (timeRule.type === 'Start Time') {
+                        if (timeRule.seconds > maxStartTime)
+                            maxStartTime = timeRule.seconds
+                        if (timeRule.seconds < minStartTime)
+                            minStartTime = timeRule.seconds
+                    }else {
+                        if (timeRule.seconds > maxEndTime)
+                            maxEndTime = timeRule.seconds
+                        if (timeRule.seconds < minEndTime)
+                            minEndTime = timeRule.seconds
+                    }
+                });
+
+                const maxDuration = maxEndTime - minStartTime;
+                const minDuration = minEndTime - maxStartTime;
                 return <Fragment key={keyPrefix + index + JSON.stringify(filter)}>
                     <div className="flex flex-col gap-0 text-xs shadow-sm border rounded-md p-4">
                         <div className="flex items-start gap-4 shrink-0">
@@ -42,9 +44,10 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                                 <p className="font-semibold text-gray-600 flex items-start gap-2 justify-between">
                                     <span>{filter.forName} ({filter.date})</span>
                                 </p>
-                                <div>Start Time ({startTimeOpVal.label}): <span className="text-gray-500 font-semibold">{intMinsToTime12(startTimeOpVal.value || 0)}</span></div>
-                                <div>End Time ({endTimeOpVal.label}): <span className="text-gray-500 font-semibold">{intMinsToTime12(endTimeOpVal.value || 0)}</span></div>
-                                <div className="text-gray-500">{intMinsToString(duration)}</div>
+                                {filter.timeRules.map((timeRule, j) => <Fragment key={'timeRule'+j}>
+                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{intMinsToTime12(timeRule.seconds || 0)}</span></div>
+                                </Fragment>)}
+                                <div className="text-gray-500">{minDuration > 0 && minDuration < maxDuration ? `${intMinsToString(minDuration)} - ` : ''}{intMinsToString(maxDuration)}</div>
                             </div>
                             <div className="flex self-start">
                                 <Button onClick={() => onClickDelete(filter)} size={'xs'} color={'red'}>Delete</Button>
