@@ -11,7 +11,7 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
     const expanders = document.querySelectorAll('div[data-test-component="StencilExpander"]');
     expanders.forEach(expander => {
         if (!expander) return;
-        const h1 = expander.querySelector('h2')?.innerText;
+        const h1 = expander.querySelector('h2')?.innerText || '';
         const vtoBadge = expander.querySelector('div[data-test-id="VtoForDay_countIcon"]');
 
         if (!isTestMode) {
@@ -32,9 +32,7 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
                 const times = time.split(' - ');
                 const startTime = convertTimeToMins(times[0]);
                 const endTime = convertTimeToMins(times[1]);
-                const duration = texts[1].textContent || '';
-                const cycle = texts[2].textContent || '';
-                vtos.push({ date: h1, startTime, endTime, time, duration, cycle, button })
+                vtos.push({ date: h1, startTime, endTime, button })
             }
         })
     })
@@ -43,7 +41,7 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
 
 const acceptVTO = (vto: VTOType, isTestMode: boolean, callBack: () => void) => {
     console.log('Click VTO Button', vto);
-    vto.button.click();
+    vto.button?.click();
     if (isTestMode) {
         setTimeout(() => closeModal(callBack), 1000);
         return;

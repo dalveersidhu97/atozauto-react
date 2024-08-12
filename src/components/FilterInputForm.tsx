@@ -57,7 +57,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
 
     const filterType = UIPreference.lastFilterType || defaultUIPreference.lastFilterType;
     const setFilterType = (fType: 'VTO' | 'VET') => setUIPreference(() => ({ lastFilterType: fType }))
-    const [timeRules, setTimeRules] = useState<TimeRule[]>([{ op: 'eq', seconds: 80, type: 'Start Time' }, { op: 'eq', seconds: 710, type: 'End Time' }]);
+    const [timeRules, setTimeRules] = useState<TimeRule[]>([{ op: 'eq', minutes: 80, type: 'Start Time' }, { op: 'eq', minutes: 710, type: 'End Time' }]);
     const [date, setDate] = useState(new Date());
     const [userInfo] = useUserInfo();
     const [forName, setForName] = useState('');
@@ -71,13 +71,13 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         if (!timeRules.length) return;
         let maxStartTimeVal = 0;
         timeRules.forEach(rule => {
-            if (rule.type === 'Start Time' && rule.seconds > maxStartTimeVal)
-                maxStartTimeVal = rule.seconds
+            if (rule.type === 'Start Time' && rule.minutes > maxStartTimeVal)
+                maxStartTimeVal = rule.minutes
         })
         const filter: FilterType = {
             timeRules: timeRules.map(rule => {
                 if (rule.type === 'Start Time') return rule;
-                return { ...rule, seconds: adjustIntMinsForMinimumValue(rule.seconds, maxStartTimeVal) }
+                return { ...rule, seconds: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) }
             }),
             date: formatDate(date),
             forName: forName.trim()
@@ -88,7 +88,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
 
     const onClickAddRule = () => {
         setTimeRules(prevRules => {
-            const newRule: TimeRule = prevRules.length ? { ...prevRules[prevRules.length - 1] } : { op: 'eq', seconds: 0, type: 'Start Time' };
+            const newRule: TimeRule = prevRules.length ? { ...prevRules[prevRules.length - 1] } : { op: 'eq', minutes: 0, type: 'Start Time' };
             return [...prevRules, newRule];
         })
     }
@@ -137,7 +137,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
                     onChange={(timeType) => updateRuleAtIndex(i, { ...rule, type: timeType as TimeRule['type'] })}
                 />
                 <Select options={TimeOperators} selectedKey={rule.op} onChange={(opKey) => updateRuleAtIndex(i, { ...rule, op: opKey as TimeOps })} />
-                <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, seconds: intMins })} defaultValue={rule.seconds} />
+                <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />
                 <button className="flex items-center justify-center" onClick={() => deleteRuleAtIndex(i)}><MdDeleteOutline className="w-6 h-6" /></button>
             </Fragment>)}
         </div>

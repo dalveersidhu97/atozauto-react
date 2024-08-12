@@ -13,7 +13,7 @@ const getVetsFromContext = (date: string, context: Element, { isTestMode }: { is
     items.forEach(listItem => {
         const heading = listItem.querySelector('div[role="heading"]');
         if (!!heading) {
-            let button = listItem.querySelector('button[data-test-id="AddOpportunityModalButton"]');
+            let button = listItem.querySelector('button[data-test-id="AddOpportunityModalButton"]') as HTMLButtonElement | null;
             if (isTestMode)
                 button = listItem.querySelector('button[data-test-id="AddOpportunityModalButton"]')
                     || listItem.querySelector('button[data-testid="OpportunityDetailsModalButton"]')
@@ -23,10 +23,8 @@ const getVetsFromContext = (date: string, context: Element, { isTestMode }: { is
                 const startTimeStr = timeStr.split('-')[0];
                 const endTimeStr = timeStr.split('-')[1];
                 const startTime = convertTimeToMins(startTimeStr);
-                const vet = {
+                const vet: VETType = {
                     button,
-                    startTimeStr,
-                    endTimeStr,
                     date,
                     startTime,
                     endTime: convertTimeToMins(endTimeStr, startTime)
@@ -34,7 +32,6 @@ const getVetsFromContext = (date: string, context: Element, { isTestMode }: { is
                 vets.push(vet);
             }
         }
-
     });
     return vets;
 }
@@ -48,7 +45,7 @@ const getVets = (date: string, { isTestMode }: { isTestMode: boolean }) => {
 
 
 const acceptVET = (vet: VETType, isTestMode: boolean, callBack: (vetAccepted?: boolean) => void) => {
-    vet.button.click();
+    vet.button?.click();
     if (isTestMode) {
         setTimeout(() => closeModal(callBack), 2000);
         return;
@@ -180,8 +177,8 @@ const removeDuplicates = (arr: string[] = []) => {
 const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, { isTestMode }: { isTestMode: boolean }) => {
     let vets = getVets(date, { isTestMode });
     console.log('Ready VETS', { vets });
-    type Acceptable = { vet?: VETType, filter: FilterType };
-    let acceptables: { vet: VETType, filter: FilterType }[] = [];
+    type Acceptable = { vet: VETType, filter: FilterType };
+    let acceptables: Acceptable[] = [];
     for (let i = 0; i < vets.length; i++) {
         const vet = vets[i];
         const acceptableFilter = isVTOAcceptable(filters, vet);

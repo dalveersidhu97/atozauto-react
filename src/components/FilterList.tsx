@@ -20,15 +20,15 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
 
                 filter.timeRules.forEach(timeRule => {
                     if (timeRule.type === 'Start Time') {
-                        if (timeRule.seconds > maxStartTime)
-                            maxStartTime = timeRule.seconds
-                        if (timeRule.seconds < minStartTime)
-                            minStartTime = timeRule.seconds
+                        if (timeRule.minutes > maxStartTime)
+                            maxStartTime = timeRule.minutes
+                        if (timeRule.minutes < minStartTime)
+                            minStartTime = timeRule.minutes
                     }else {
-                        if (timeRule.seconds > maxEndTime)
-                            maxEndTime = timeRule.seconds
-                        if (timeRule.seconds < minEndTime)
-                            minEndTime = timeRule.seconds
+                        if (timeRule.minutes > maxEndTime)
+                            maxEndTime = timeRule.minutes
+                        if (timeRule.minutes < minEndTime)
+                            minEndTime = timeRule.minutes
                     }
                 });
 
@@ -45,7 +45,7 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                                     <span>{filter.forName} ({filter.date})</span>
                                 </p>
                                 {filter.timeRules.map((timeRule, j) => <Fragment key={'timeRule'+j}>
-                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{intMinsToTime12(timeRule.seconds || 0)}</span></div>
+                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{intMinsToTime12(timeRule.minutes || 0)}</span></div>
                                 </Fragment>)}
                                 <div className="text-gray-500">{minDuration > 0 && minDuration < maxDuration ? `${intMinsToString(minDuration)} - ` : ''}{maxDuration > 0 && intMinsToString(maxDuration)}</div>
                             </div>

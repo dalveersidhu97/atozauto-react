@@ -1,4 +1,4 @@
-import { FilterType } from "../../types";
+import { FilterType, VTOType } from "../../types";
 import * as contentUtils from "../content.utils";
 
 describe('isVTOAcceptable', () => {
@@ -7,22 +7,19 @@ describe('isVTOAcceptable', () => {
     });
     it('Should pass', () => {
         jest.spyOn(contentUtils, 'getUserInfo').mockReturnValue({ name: 'Dalveer' });
-        const vto = {
+        const vto: VTOType = {
             "date": "Fri, Jul 5",
             "startTime": 40,
             "endTime": 710,
-            "time": "12:40a.m. - 9:10a.m.",
-            "duration": "(8hrs 30mins)",
-            "cycle": "SORT_1",
-            "button": {}
+            "button": null
         }
         const filters: FilterType[] = [
             {
                 "date": "Jul 05, Fri",
                 timeRules: [
-                    { type: 'Start Time', op: 'lt', seconds: 50 },
-                    { type: 'End Time', op: 'eq', seconds: 710 },
-                    { type: 'End Time', op: 'eq', seconds: 710 },
+                    { type: 'Start Time', op: 'lt', minutes: 50 },
+                    { type: 'End Time', op: 'eq', minutes: 710 },
+                    { type: 'End Time', op: 'eq', minutes: 710 },
                 ],
                 "forName": "Dalveer",
             }
@@ -31,23 +28,20 @@ describe('isVTOAcceptable', () => {
     })
     it('Should pass', () => {
         jest.spyOn(contentUtils, 'getUserInfo').mockReturnValue({ name: 'Dalveer' });
-        const vto = {
+        const vto: VTOType = {
             "date": "Jul 5",
             "startTime": 40,
             "endTime": 710,
-            "time": "12:40a.m. - 9:10a.m.",
-            "duration": "(8hrs 30mins)",
-            "cycle": "SORT_1",
-            "button": {}
+            "button": null
         }
         const filters: FilterType[] = [
             {
                 "date": "Jul 05, Fri",
                 timeRules: [
-                    { type: 'Start Time', op: 'lte', seconds: 40 },
-                    { type: 'Start Time', op: 'lt', seconds: 50 },
-                    { type: 'End Time', op: 'gte', seconds: 710 },
-                    { type: 'End Time', op: 'gt', seconds: 700 },
+                    { type: 'Start Time', op: 'lte', minutes: 40 },
+                    { type: 'Start Time', op: 'lt', minutes: 50 },
+                    { type: 'End Time', op: 'gte', minutes: 710 },
+                    { type: 'End Time', op: 'gt', minutes: 700 },
                 ],
                 "forName": "Dalveer",
             }

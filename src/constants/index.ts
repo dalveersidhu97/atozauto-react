@@ -13,7 +13,7 @@ export const defaultPreference: PreferenceType = {
     hotMinutesMultiplier: 1,
     hotSecondsLessThan: 7,
     minutesIncrementBy: 1,
-    secondsIncrementBy: 0,
+    secondsIncrementBy: 1,
     refreshMode: 'Smart',
     testMode: 'Off',
 }

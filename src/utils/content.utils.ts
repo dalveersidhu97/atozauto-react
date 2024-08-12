@@ -156,9 +156,9 @@ export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
         const timeRule = filter.timeRules[index];
         let valid = true;
         if (timeRule.type === 'Start Time')
-            valid = is(vto.startTime, timeRule.op, timeRule.seconds);
+            valid = is(vto.startTime, timeRule.op, timeRule.minutes);
         else
-            valid = is(vto.endTime, timeRule.op, timeRule.seconds);
+            valid = is(vto.endTime, timeRule.op, timeRule.minutes);
         if (!valid) return false;
     }
     return true;
@@ -180,7 +180,7 @@ const getArryObjectIndex = (obj: Object, arr: Object[]) => {
 }
 
 
-export const sortArray = (acceptables: { vto?: VTOType, vet?: VETType, filter: FilterType }[], filters: FilterType[]) => {
+export const sortArray = <T>(acceptables: T[], filters: FilterType[]) => {
     function compare(a: any, b: any) {
         if (getArryObjectIndex(a.filter, filters) < getArryObjectIndex(b.filter, filters))
             return -1;
