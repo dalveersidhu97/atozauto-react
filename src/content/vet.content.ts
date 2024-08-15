@@ -2,6 +2,7 @@ import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VETType } from "../types";
 import { closeModal, finalCallBack, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
+import { makeGroups } from "../utils/grouping.utils";
 import { createInfoBoxWithHTML, InjectorQueue } from "../utils/html.utils";
 import { startMain } from "./init.content";
 
@@ -27,8 +28,9 @@ const getVetsFromContext = (date: string, context: Element, { isTestMode }: { is
                     button,
                     date,
                     startTime,
-                    endTime: convertTimeToMins(endTimeStr, startTime)
-                }
+                    endTime: convertTimeToMins(endTimeStr, startTime),
+                    timeStr
+                } as VETType;
                 vets.push(vet);
             }
         }
@@ -93,7 +95,7 @@ const waitForLoadingOver = (date: string, callBack: () => void) => {
             return callBack()
         };
         const rows = presentation.querySelectorAll(':scope > div[data-test-component="StencilReactCol"]');
-        
+
         if (rows.length === 2) {
             const thirdRow = rows[1];
             const vets = getVetsFromContext(date, thirdRow, { isTestMode: true });
@@ -177,6 +179,7 @@ const removeDuplicates = (arr: string[] = []) => {
 const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, { isTestMode }: { isTestMode: boolean }) => {
     let vets = getVets(date, { isTestMode });
     console.log('Ready VETS', { vets });
+    console.log('Groups', makeGroups(vets, 'desc', (gap) => gap === 0));
     type Acceptable = { vet: VETType, filter: FilterType };
     let acceptables: Acceptable[] = [];
     for (let i = 0; i < vets.length; i++) {
@@ -198,7 +201,7 @@ const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter
 
         const injector = () => createInfoBoxWithHTML(`Accepting VET...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
         InjectorQueue.add(injector);
-        
+
         acceptVET(vet, isTestMode, (vetAccepted) => {
             !isTestMode && vetAccepted && removeFilter(StorageKeys.vetFilters, filter);
             callBack();
@@ -240,7 +243,7 @@ const main = (preference: PreferenceType) => {
                 acceptAllAcceptables(filters, date, callBack, { isTestMode })
             }, !notWaitForLoading, true, isTestMode);
         }, () => {
-            !!nextPreSelectedDate && selectDay(nextPreSelectedDate, () => {}, false, true, isTestMode);
+            !!nextPreSelectedDate && selectDay(nextPreSelectedDate, () => { }, false, true, isTestMode);
             finalCallBack(filters, preference);
         }, 'SelectDayLooper', 0, 0)
     });

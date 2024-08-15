@@ -49,7 +49,7 @@ export const makeGroups = <T extends VoluntaryElementBaseType>(vtosOrVets: T[], 
         const grpi = [...groupsTimeSorted[i]];
         for (let j = i + 1; j < groupsTimeSorted.length; j++) {
             const grpj = [...groupsTimeSorted[j]];
-            const endTimeI = grpi[grpi.length].endTime;
+            const endTimeI = grpi[grpi.length-1].endTime;
             const startTimeJ = grpj[0].startTime;
             const gap = startTimeJ - endTimeI;
             if (gapValid(gap)) {
@@ -60,6 +60,6 @@ export const makeGroups = <T extends VoluntaryElementBaseType>(vtosOrVets: T[], 
             groupsMerged.push(grpi);
     }
 
-    const groupsMergedSorted = sortGroupsByDuration(groupsMerged);
+    const groupsMergedSorted = sortGroupsByDuration(groupsMerged, sortOrder);
     return groupsMergedSorted;
 }
