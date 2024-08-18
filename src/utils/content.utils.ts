@@ -1,5 +1,5 @@
 import { StorageKeys, defaultPreference } from "../constants";
-import { FilterType, PreferenceType, TimeOps, VETType, VTOType } from "../types";
+import { FilterType, PreferenceType, TimeOps, VETType, VoluntaryElementBaseType, VTOType } from "../types";
 import { deepEqualObjects } from "./comparison.utils";
 import { InjectorQueue, createReloadingInfoHTML, injectInfoToPage, injectReloadingInfoBox, removeInfoBox } from "./html.utils";
 
@@ -167,6 +167,45 @@ export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
 export const isVTOAcceptable = (vtoFilters: FilterType[], vto: VTOType) => {
     for (let i = 0; i < vtoFilters.length; i++) {
         const isFilterValid = validateVTOFilter(vto, vtoFilters[i]);
+        if (isFilterValid) {
+            return vtoFilters[i];
+        }
+    }
+    return false;
+}
+
+export const validateVTGroup = <T extends VoluntaryElementBaseType>(vtoOrVETGroup: T[], filter: FilterType) => {
+    if (!vtoOrVETGroup.length) return false;
+    const userName = getUserInfo().name || '';
+    const vtoDate = vtoOrVETGroup[0].date;
+    const requiredDate = filter.date;
+
+    if (filter.forName.toLowerCase().trim() !== userName.toLowerCase().trim()) {
+        console.log('User name does not match')
+        return false;
+    }
+
+    if (!equalDateStrings(vtoDate, requiredDate)) {
+        return false;
+    }
+
+    for (let index = 0; index < filter.timeRules.length; index++) {
+        const timeRule = filter.timeRules[index];
+        let valid = true;
+        const startTime = vtoOrVETGroup[0].startTime;
+        const endTime = vtoOrVETGroup[vtoOrVETGroup.length-1].endTime;
+        if (timeRule.type === 'Start Time')
+            valid = is(startTime, timeRule.op, timeRule.minutes);
+        else
+            valid = is(endTime, timeRule.op, timeRule.minutes);
+        if (!valid) return false;
+    }
+    return true;
+}
+
+export const isVTGroupAcceptable = <T extends VoluntaryElementBaseType>(vtoFilters: FilterType[], vtoOrVet: T[]) => {
+    for (let i = 0; i < vtoFilters.length; i++) {
+        const isFilterValid = validateVTGroup(vtoOrVet, vtoFilters[i]);
         if (isFilterValid) {
             return vtoFilters[i];
         }

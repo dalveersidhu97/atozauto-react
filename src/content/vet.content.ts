@@ -178,8 +178,9 @@ const removeDuplicates = (arr: string[] = []) => {
 
 const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, { isTestMode }: { isTestMode: boolean }) => {
     let vets = getVets(date, { isTestMode });
+    let vetGroups = makeGroups(vets, 'desc', (gap) => gap === 0);
     console.log('Ready VETS', { vets });
-    console.log('Groups', makeGroups(vets, 'desc', (gap) => gap === 0));
+    console.log('Groups', vetGroups);
     type Acceptable = { vet: VETType, filter: FilterType };
     let acceptables: Acceptable[] = [];
     for (let i = 0; i < vets.length; i++) {
