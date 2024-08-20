@@ -23,6 +23,7 @@ describe('isVTOAcceptable', () => {
                 ],
                 "forName": "Dalveer",
                 preferedDuration: 'Max',
+                gap: 0,
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);
@@ -46,6 +47,7 @@ describe('isVTOAcceptable', () => {
                 ],
                 preferedDuration: 'Max',
                 "forName": "Dalveer",
+                gap: 0,
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);

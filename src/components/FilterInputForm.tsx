@@ -115,7 +115,8 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
             }),
             preferedDuration,
             date: formatDate(date),
-            forName: forName.trim()
+            forName: forName.trim(),
+            gap: 0,
         }
         const createFilter = filterType === 'VTO' ? onCreateVTOFilter : onCreateVETFilter;
         createFilter(filter);

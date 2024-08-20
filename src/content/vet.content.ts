@@ -182,21 +182,18 @@ const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter
     } = preference;
     const isTestMode = testMode === 'On';
     let vets = getVets(date, { isTestMode });
-    let vetGroups = makeGroups(vets, 'desc', (gap) => gap > -1 && gap <= 0);
     console.log('Ready VETS', { vets });
-    console.log('Groups', vetGroups);
     type Acceptable = { vet: VETType, filter: FilterType };
     let acceptables: Acceptable[] = [];
     let acceptableGprs = [];
 
     for (let k = 0; k < filters.length; k++) {
         const filter = filters[k];
-        if(!equalDateStrings(filter.date, date))
+        let vetGroups = makeGroups(vets, filter.preferedDuration === 'Max' ? 'desc' : 'asc', (gap) => gap > -1 && gap <= 0);
+        if (!equalDateStrings(filter.date, date))
             continue;
-        const incrementBy = filter.preferedDuration === 'Max' ? 1 : -1;
-        let i = filter.preferedDuration === 'Max' ? 0 : vetGroups.length - 1;
         vetGroups:
-        for (i; i > -1 && i < vetGroups.length; i += incrementBy) {
+        for (let i = 0; i < vetGroups.length; i++) {
             const vtGrp = vetGroups[i];
             const acceptableFilter = isVTGroupAcceptable([filter], vtGrp);
             if (!!acceptableFilter) {
@@ -208,7 +205,7 @@ const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter
                     const endTimeB = vtGrp[vtGrp.length - 1].endTime;
                     const isABeforeB = startTimeA < startTimeB && endTimeA <= startTimeB;
                     const isBBeforeA = startTimeB < startTimeA && endTimeB <= startTimeA;
-                    if (!isABeforeB && !isBBeforeA) 
+                    if (!isABeforeB && !isBBeforeA)
                         continue vetGroups;
                 }
                 acceptableGprs.push(vtGrp);
@@ -217,7 +214,7 @@ const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter
             }
         }
     }
-    
+
     // for (let i = 0; i < vets.length; i++) {
     //     const vet = vets[i];
     //     const acceptableFilter = isVTOAcceptable(filters, vet);

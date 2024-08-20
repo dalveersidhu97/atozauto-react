@@ -34,7 +34,7 @@
     },
     {
       "js": [
-        "assets/content-script-loader.vet.content.ts.32ee58ab.e9e2d855.js"
+        "assets/content-script-loader.vet.content.ts.38ce9e62.d4f51892.js"
       ],
       "matches": [
         "https://atoz.amazon.work/shifts/schedule/find*"
@@ -57,7 +57,7 @@
         "assets/formatters.738ad4ac.js",
         "assets/init.content.8bae4b55.js",
         "assets/vto.content.ts.1c9836ee.js",
-        "assets/vet.content.ts.32ee58ab.js"
+        "assets/vet.content.ts.38ce9e62.js"
       ],
       "use_dynamic_url": true
     }

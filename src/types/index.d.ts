@@ -7,6 +7,7 @@ export type FilterType = {
     forName: string,
     timeRules: TimeRule[],
     preferedDuration: 'Min' | 'Max';
+    gap: number
 }
 
 export type PreferenceType = {
