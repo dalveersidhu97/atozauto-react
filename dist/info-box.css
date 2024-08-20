@@ -1,0 +1,55 @@
+.azauto-info-box {
+    position: fixed;
+    z-index: 10000;
+    user-select: none;
+    min-width: max-content;
+    min-height: fit-content;
+    padding: 10px;
+    cursor: move;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: start;
+    align-items: start;
+}
+
+.azauto-info-box-container {
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 1rem;
+    border-radius: .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    animation: .5s ease-out 0s 1 fadeIn;
+}
+
+#azauto-info-title {
+    font-weight: 500;
+}
+
+.fade-out {
+    animation-name: fadeOut;
+    animation-duration: 1.5s;  
+    animation-fill-mode: forwards;
+}
+
+@keyframes slideInFromLeft {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+@keyframes fadeOut {
+    1% { opacity: 1; }
+    50% { opacity: 1; }
+    99% { opacity: 0; }
+    100% { opacity: 0; display: none !important; }
+}
+@keyframes fadeIn {
+    0% { opacity: .1; }
+    100% { opacity: 1;}
+}
