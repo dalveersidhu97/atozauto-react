@@ -2,12 +2,18 @@ import { UIPreferenceType } from "../hooks/useUIPreference"
 import { PreferenceType, TimeOps } from "../types"
 
 export const TimeOperators: { key: TimeOps, label: string }[] = [
-    { key: 'eq', label: 'Equals' },
+    { key: 'eq', label: 'At' },
     { key: 'gt', label: 'After' },
     { key: 'lt', label: 'Before' },
     { key: 'gte', label: 'At or After' },
     { key: 'lte', label: 'At or Before' }
 ]
+
+export const DurationOperators: { key: TimeOps, label: string }[] = [
+    { key: 'gte', label: 'Max' },
+    { key: 'lte', label: 'Min' },
+    { key: 'eq', label: 'Equal' },
+];
 
 export const defaultPreference: PreferenceType = {
     hotMinutesMultiplier: 1,
@@ -16,6 +22,12 @@ export const defaultPreference: PreferenceType = {
     secondsIncrementBy: 1,
     refreshMode: 'Smart',
     testMode: 'Off',
+    vet: {
+        maxGapMinutes: 0,
+        order: {
+            duration: 'desc'
+        }
+    }
 }
 export const defaultUIPreference: UIPreferenceType = {
     smartModeCollapsed: false,

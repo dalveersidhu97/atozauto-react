@@ -4,6 +4,15 @@ import { TimeOperators } from "../constants";
 import { Badge, Button, Card } from "flowbite-react";
 import { intMinsToString, intMinsToTime12 } from "../utils/formatters";
 
+const durationString = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    let str = ``;
+    if (h) str = `${h}h`;
+    if (m) str = str + ` ${m}m`;
+    return str.trim();
+}
+
 export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType) => any, filterType: string }> = ({ list, onDelete, filterType }) => {
     const keyPrefix = useId();
     const onClickDelete = (filter: FilterType) => {
@@ -24,7 +33,7 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                             maxStartTime = timeRule.minutes
                         if (timeRule.minutes < minStartTime)
                             minStartTime = timeRule.minutes
-                    }else {
+                    }else if(timeRule.type === 'End Time') {
                         if (timeRule.minutes > maxEndTime)
                             maxEndTime = timeRule.minutes
                         if (timeRule.minutes < minEndTime)
@@ -45,7 +54,7 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                                     <span>{filter.forName} ({filter.date})</span>
                                 </p>
                                 {filter.timeRules.map((timeRule, j) => <Fragment key={'timeRule'+j}>
-                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{intMinsToTime12(timeRule.minutes || 0)}</span></div>
+                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{timeRule.type === 'Duration' ?  durationString(timeRule.minutes): intMinsToTime12(timeRule.minutes || 0)}</span></div>
                                 </Fragment>)}
                                 <div className="text-gray-500">{minDuration > 0 && minDuration < maxDuration ? `${intMinsToString(minDuration)} - ` : ''}{maxDuration > 0 && intMinsToString(maxDuration)}</div>
                             </div>

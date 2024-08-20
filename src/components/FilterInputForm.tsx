@@ -3,11 +3,12 @@ import { adjustIntMinsForMinimumValue, formatDate, formatDateForInput, getCurren
 import { Button, Datepicker, Dropdown, TextInput } from "flowbite-react";
 import { IoIosArrowDown } from "react-icons/io";
 import { FilterType, TimeOps, TimeRule } from "../types";
-import { defaultPreference, defaultUIPreference, TimeOperators } from "../constants";
+import { defaultPreference, defaultUIPreference, TimeOperators, DurationOperators } from "../constants";
 import { MdDeleteOutline } from "react-icons/md";
 import { useUserInfo } from "../hooks/useUserInfo";
 import { datesAreOnSameDay } from "../utils/comparison.utils";
 import { useUIPreference } from "../hooks/useUIPreference";
+import { NumberInput } from "./Preference";
 
 const TimeInput: FC<{ defaultValue?: number, min?: number, max?: number, onChange: (intMinutes: number, timeStr: string) => any }> = ({ defaultValue, onChange, min, max }) => {
     const inputIdPrefix = useId();
@@ -28,6 +29,38 @@ const TimeInput: FC<{ defaultValue?: number, min?: number, max?: number, onChang
                 </svg>
             </div>
             <input onChange={onChangeListener} min={minValueStr} max={maxValueStr} value={defaultValueStr} type="time" id={inputIdPrefix} className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+        </div>
+    </>;
+}
+
+const DurationInput: FC<{ defaultValue?: number, min?: number, max?: number, onChange: (intMinutes: number) => any }> = ({ defaultValue, onChange, min, max }) => {
+    const minutes = defaultValue || 0;
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    const onChangeHours = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let hours = parseInt(e.target.value);
+        if (isNaN(hours)) {
+            hours = 0;
+        }
+        const newMinutes = hours * 60 + m;
+        onChange(newMinutes);
+    }
+    const onChangeMins = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let mins = parseInt(e.target.value);
+        if (isNaN(mins)) {
+            mins = 0;
+        }
+        const newMinutes = h * 60 + mins;
+        onChange(newMinutes);
+    }
+
+    return <>
+        <div role="textbox" className="flex shrink-1 grow-0 items-center text-sm gap-1.5">
+            <input onChange={onChangeHours} min={0} max={24} maxLength={2} size={1} defaultValue={h} type="text" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 grow" />
+            <div>h</div>
+            <input onChange={(onChangeMins)} min={0} max={60} maxLength={2} size={1} defaultValue={m} type="text" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 grow" />
+            <div className="">m</div>
         </div>
     </>;
 }
@@ -77,7 +110,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         const filter: FilterType = {
             timeRules: timeRules.map(rule => {
                 if (rule.type === 'Start Time') return rule;
-                return { ...rule, seconds: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) }
+                return { ...rule, minutes: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) }
             }),
             date: formatDate(date),
             forName: forName.trim()
@@ -95,7 +128,12 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
 
     const updateRuleAtIndex = (i: number, newRule: TimeRule) => {
         setTimeRules(prevRules => {
-            return prevRules.map((rule, j) => i === j ? newRule : rule);
+            return prevRules.map((rule, j) => {
+                if (i === j && newRule.type === 'Duration' && rule.type !== 'Duration') {
+                    return { ...newRule, op: 'eq', minutes: 0 }
+                }
+                return i === j ? newRule : rule
+            });
         })
     }
 
@@ -130,18 +168,22 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
             }}>Tomorrow</Button>
         </div>
         <div className="grid grid-cols-[1fr_1fr_1fr_max-content] gap-2">
-            {timeRules.map((rule, i) => <Fragment key={'rule' + i + Math.random()}>
-                <Select
-                    options={[{ key: 'Start Time', label: 'Start Time' }, { key: 'End Time', label: 'End Time' }]}
-                    selectedKey={rule.type}
-                    onChange={(timeType) => updateRuleAtIndex(i, { ...rule, type: timeType as TimeRule['type'] })}
-                />
-                <Select options={TimeOperators} selectedKey={rule.op} onChange={(opKey) => updateRuleAtIndex(i, { ...rule, op: opKey as TimeOps })} />
-                <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />
-                <button className="flex items-center justify-center" onClick={() => deleteRuleAtIndex(i)}><MdDeleteOutline className="w-6 h-6" /></button>
-            </Fragment>)}
+            {timeRules.map((rule, i) => {
+                const operators = rule.type === 'Duration' ? DurationOperators : TimeOperators;
+                return <Fragment key={'rule' + i + Math.random()}>
+                    <Select
+                        options={[{ key: 'Start Time', label: 'Start Time' }, { key: 'End Time', label: 'End Time' }, { key: 'Duration', label: 'Duration' }]}
+                        selectedKey={rule.type}
+                        onChange={(timeType) => updateRuleAtIndex(i, { ...rule, type: timeType as TimeRule['type'] })}
+                    />
+                    <Select options={operators} selectedKey={rule.op} onChange={(opKey) => updateRuleAtIndex(i, { ...rule, op: opKey as TimeOps })} />
+                    {rule.type !== 'Duration' && <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />}
+                    {rule.type === 'Duration' && <DurationInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />}
+                    <button className="flex items-center justify-center" onClick={() => deleteRuleAtIndex(i)}><MdDeleteOutline className="w-6 h-6" /></button>
+                </Fragment>
+            })}
         </div>
-        <Button color={'gray'} onClick={onClickAddRule}>Add Rule</Button>
+        <Button color={'gray'} className="max-w-fit self-center" onClick={onClickAddRule}>+ Add Rule</Button>
         <Button onClick={onClickCreatefilter}>{`Add ${filterType} Filter`}</Button>
     </>
 }

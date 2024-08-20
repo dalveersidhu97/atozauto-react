@@ -1,6 +1,6 @@
 export type TimeOps = 'eq' | 'gt' | 'lt' | 'gte' | 'lte';
 
-export type TimeRule = { op: TimeOps, minutes: number, type: 'Start Time' | 'End Time' };
+export type TimeRule = { op: TimeOps, minutes: number, type: 'Start Time' | 'End Time' | 'Duration' };
 
 export type FilterType = {
     date: string,
@@ -15,6 +15,12 @@ export type PreferenceType = {
     secondsIncrementBy: number,
     refreshMode: 'Off' | 'Smart' | 'Full Speed',
     testMode: 'On' | 'Off',
+    vet: {
+        order: {
+            duration: 'asc' | 'desc'
+        },
+        maxGapMinutes: number
+    }
 };
 
 export type UserInfo = {

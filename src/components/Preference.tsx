@@ -8,7 +8,7 @@ import { StorageKeys, defaultPreference } from "../constants";
 import { accordianTheme } from "../flowbite-themes/accordian.theme";
 import { useUIPreference } from "../hooks/useUIPreference";
 
-const NumberInput: FC<{ label: string, desc: string, unit: string, value: number, onChange: (value: number) => any, min?: number, max?: number }> = ({ label, desc, unit, value, onChange, min, max }) => {
+export const NumberInput: FC<{ label: string, desc: string, unit: string, value: number, onChange: (value: number) => any, min?: number, max?: number }> = ({ label, desc, unit, value, onChange, min, max }) => {
     const inputIdPrefix = useId();
     const onChangeListener = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = +e.target.value;

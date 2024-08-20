@@ -1,6 +1,7 @@
 import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VETType } from "../types";
-import { closeModal, finalCallBack, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
+import { deepEqualObjects } from "../utils/comparison.utils";
+import { closeModal, finalCallBack, isVTGroupAcceptable, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
 import { makeGroups } from "../utils/grouping.utils";
 import { createInfoBoxWithHTML, InjectorQueue } from "../utils/html.utils";
@@ -176,20 +177,45 @@ const removeDuplicates = (arr: string[] = []) => {
     return arr.filter((item, index) => arr.indexOf(item) === index);
 }
 
-const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, { isTestMode }: { isTestMode: boolean }) => {
+const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, preference: PreferenceType) => {
+    const {
+        testMode,
+        vet: {
+            maxGapMinutes,
+            order,
+        }
+    } = preference;
+    const isTestMode = testMode === 'On';
     let vets = getVets(date, { isTestMode });
-    let vetGroups = makeGroups(vets, 'desc', (gap) => gap === 0);
+    let vetGroups = makeGroups(vets, 'desc', (gap) => gap > -1 && gap <= maxGapMinutes);
     console.log('Ready VETS', { vets });
     console.log('Groups', vetGroups);
     type Acceptable = { vet: VETType, filter: FilterType };
     let acceptables: Acceptable[] = [];
-    for (let i = 0; i < vets.length; i++) {
-        const vet = vets[i];
-        const acceptableFilter = isVTOAcceptable(filters, vet);
+
+    const incrementBy = order.duration === 'desc' ? 1 : -1;
+    let i = order.duration === 'desc' ? 0 : vetGroups.length - 1;
+
+    for (i; i > -1 && i < vetGroups.length; i += incrementBy) {
+        const vtGrp = vetGroups[i];
+        const acceptableFilter = isVTGroupAcceptable(filters, vtGrp);
+        filters = filters.filter(filter => {
+            if (deepEqualObjects(acceptableFilter, filter))
+                return false;
+            return true;
+        })
         if (!!acceptableFilter) {
-            acceptables.push({ vet, filter: acceptableFilter });
+            const acceptablesNext: Acceptable[] = vtGrp.map(vet => ({ vet, filter: acceptableFilter }))
+            acceptables.push(...acceptablesNext);
         }
     }
+    // for (let i = 0; i < vets.length; i++) {
+    //     const vet = vets[i];
+    //     const acceptableFilter = isVTOAcceptable(filters, vet);
+    //     if (!!acceptableFilter) {
+    //         acceptables.push({ vet, filter: acceptableFilter });
+    //     }
+    // }
     console.log('Acceptable VETS', { acceptables });
     let acceptablesSortedAsFilters = sortArray(acceptables, filters);
     console.log('Acceptable Sorted As Filters VETS', { acceptablesSortedAsFilters });
@@ -241,7 +267,7 @@ const main = (preference: PreferenceType) => {
         looper(selectableDates, (date, callBack, index) => {
             const notWaitForLoading = date === preSelectedDate;
             selectDay(date, () => {
-                acceptAllAcceptables(filters, date, callBack, { isTestMode })
+                acceptAllAcceptables(filters, date, callBack, preference)
             }, !notWaitForLoading, true, isTestMode);
         }, () => {
             !!nextPreSelectedDate && selectDay(nextPreSelectedDate, () => { }, false, true, isTestMode);

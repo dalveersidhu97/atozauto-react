@@ -1,4 +1,4 @@
-import { StorageKeys } from "../constants";
+import { defaultPreference, StorageKeys } from "../constants";
 import { PreferenceType } from "../types";
 import { setUserInfo } from "../utils/content.utils";
 import { createInfoBoxWithHTML, injectInfoToPage, InjectorQueue, injectReloadingInfoBoxMillis, removeInfoBox } from "../utils/html.utils";
@@ -51,7 +51,12 @@ export const startMain = (main: (preference: PreferenceType) => void) => {
             !!noResponseReloadTimeout && clearTimeout(noResponseReloadTimeout);
             clearInterval(inverval);
             chrome.storage.local.get(StorageKeys.preference, function (result) {
-                const preference = result.preference || {};
+                const preference = result.preference || defaultPreference;
+                Object.keys(defaultPreference).forEach(key => {
+                    if (preference[key] === undefined) {
+                        preference[key] = defaultPreference[key as keyof PreferenceType];
+                    }
+                });
                 main(preference);
             });
             const GenericErrorContainer = document.querySelector('div[data-test-id="GenericErrorPageLayout"]');
