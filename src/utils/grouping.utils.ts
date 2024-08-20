@@ -53,11 +53,15 @@ export const makeGroups = <T extends VoluntaryElementBaseType>(vtosOrVets: T[], 
 
     for (let i = 0; i < groupsTimeSorted.length; i++) {
         const grpi = [...groupsTimeSorted[i]];
+        if (grpi[grpi.length - 1].endTime >= 24 * 60) 
+            break;
 
         let j = i + 1;
         let counter = groupsTimeSorted.length - 1;
 
         while (counter > 0) {
+            if (grpi[grpi.length - 1].endTime >= 24 * 60) 
+                break;
             counter--;
             if (j === groupsTimeSorted.length) {
                 j = 0;

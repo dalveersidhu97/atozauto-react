@@ -22,12 +22,6 @@ export const defaultPreference: PreferenceType = {
     secondsIncrementBy: 1,
     refreshMode: 'Smart',
     testMode: 'Off',
-    vet: {
-        maxGapMinutes: 0,
-        order: {
-            duration: 'desc'
-        }
-    }
 }
 export const defaultUIPreference: UIPreferenceType = {
     smartModeCollapsed: false,

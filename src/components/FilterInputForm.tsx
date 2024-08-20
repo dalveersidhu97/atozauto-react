@@ -1,6 +1,6 @@
 import React, { FC, Fragment, useEffect, useId, useState } from "react";
 import { adjustIntMinsForMinimumValue, formatDate, formatDateForInput, getCurrentTime, intMinsToTimeStr, moveObjectWithKeyToFront, timeStringToIntMins } from "../utils/formatters";
-import { Button, Datepicker, Dropdown, TextInput } from "flowbite-react";
+import { Button, Datepicker, Dropdown, Label, Radio, TextInput } from "flowbite-react";
 import { IoIosArrowDown } from "react-icons/io";
 import { FilterType, TimeOps, TimeRule } from "../types";
 import { defaultPreference, defaultUIPreference, TimeOperators, DurationOperators } from "../constants";
@@ -94,6 +94,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const [date, setDate] = useState(new Date());
     const [userInfo] = useUserInfo();
     const [forName, setForName] = useState('');
+    const [preferedDuration, setPreferedDuration] = useState<'Min'|'Max'>('Max');
 
     useEffect(() => {
         if (userInfo?.name)
@@ -112,6 +113,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
                 if (rule.type === 'Start Time' || rule.type === 'Duration') return rule;
                 return { ...rule, minutes: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) }
             }),
+            preferedDuration,
             date: formatDate(date),
             forName: forName.trim()
         }
@@ -184,6 +186,16 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
             })}
         </div>
         <Button color={'gray'} className="max-w-fit self-center" onClick={onClickAddRule}>+ Add Rule</Button>
+        <div className="flex gap-3">
+            <div className="flex gap-1 items-center">
+                <Radio name="preferedDuration" id="preferedDurationMax" value={'DurationMax'} onChange={(e)=>e.target.checked && setPreferedDuration('Max')} defaultChecked={preferedDuration==='Max'}></Radio>
+                <Label htmlFor="preferedDurationMax">Prefer Maximum Duration</Label>
+            </div>
+            <div className="flex gap-1 items-center">
+                <Radio name="preferedDuration" id="preferedDurationMin" value={'DurationMin'} onChange={(e)=>e.target.checked && setPreferedDuration('Min')} defaultChecked={preferedDuration==='Min'}></Radio>
+                <Label htmlFor="preferedDurationMin">Prefer Minimum Duration</Label>
+            </div>
+        </div>
         <Button onClick={onClickCreatefilter}>{`Add ${filterType} Filter`}</Button>
     </>
 }

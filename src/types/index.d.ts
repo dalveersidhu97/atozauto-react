@@ -6,6 +6,7 @@ export type FilterType = {
     date: string,
     forName: string,
     timeRules: TimeRule[],
+    preferedDuration: 'Min' | 'Max';
 }
 
 export type PreferenceType = {
@@ -15,12 +16,6 @@ export type PreferenceType = {
     secondsIncrementBy: number,
     refreshMode: 'Off' | 'Smart' | 'Full Speed',
     testMode: 'On' | 'Off',
-    vet: {
-        order: {
-            duration: 'asc' | 'desc'
-        },
-        maxGapMinutes: number
-    }
 };
 
 export type UserInfo = {

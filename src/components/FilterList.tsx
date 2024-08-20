@@ -56,6 +56,9 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                                 {filter.timeRules.map((timeRule, j) => <Fragment key={'timeRule'+j}>
                                     <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{timeRule.type === 'Duration' ?  durationString(timeRule.minutes): intMinsToTime12(timeRule.minutes || 0)}</span></div>
                                 </Fragment>)}
+                                <p className="text-gray-600 flex items-start gap-2 justify-between">
+                                    <span>Prefer {filter.preferedDuration === 'Max' ? 'Maximum' : 'Minimum'} Duration</span>
+                                </p>
                                 <div className="text-gray-500">{minDuration > 0 && minDuration < maxDuration ? `${intMinsToString(minDuration)} - ` : ''}{maxDuration > 0 && intMinsToString(maxDuration)}</div>
                             </div>
                             <div className="flex self-start">

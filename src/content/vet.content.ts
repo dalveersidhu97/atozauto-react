@@ -1,7 +1,6 @@
 import { StorageKeys } from "../constants";
 import { FilterType, PreferenceType, VETType } from "../types";
-import { deepEqualObjects } from "../utils/comparison.utils";
-import { closeModal, finalCallBack, isVTGroupAcceptable, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
+import { closeModal, equalDateStrings, finalCallBack, isVTGroupAcceptable, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
 import { makeGroups } from "../utils/grouping.utils";
 import { createInfoBoxWithHTML, InjectorQueue } from "../utils/html.utils";
@@ -180,46 +179,45 @@ const removeDuplicates = (arr: string[] = []) => {
 const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter: () => void, preference: PreferenceType) => {
     const {
         testMode,
-        vet: {
-            maxGapMinutes,
-            order,
-        }
     } = preference;
     const isTestMode = testMode === 'On';
     let vets = getVets(date, { isTestMode });
-    let vetGroups = makeGroups(vets, 'desc', (gap) => gap > -1 && gap <= maxGapMinutes);
+    let vetGroups = makeGroups(vets, 'desc', (gap) => gap > -1 && gap <= 0);
     console.log('Ready VETS', { vets });
     console.log('Groups', vetGroups);
     type Acceptable = { vet: VETType, filter: FilterType };
     let acceptables: Acceptable[] = [];
     let acceptableGprs = [];
 
-    const incrementBy = order.duration === 'desc' ? 1 : -1;
-    let i = order.duration === 'desc' ? 0 : vetGroups.length - 1;
-
-    vetGroups:
-    for (i; i > -1 && i < vetGroups.length; i += incrementBy) {
-        const vtGrp = vetGroups[i];
-        const acceptableFilter = isVTGroupAcceptable(filters, vtGrp);
-        for (let index = 0; index < acceptableGprs.length; index++) {
-            const existingGrp = acceptableGprs[index];
-            const startTimeA = existingGrp[0].startTime;
-            const endTimeA = existingGrp[existingGrp.length - 1].endTime;
-            const startTimeB = vtGrp[0].startTime;
-            const endTimeB = vtGrp[vtGrp.length - 1].endTime;
-            if (startTimeA === startTimeB || endTimeA === endTimeB)
-                continue vetGroups;
-            if (startTimeA > startTimeB && endTimeA < endTimeB)
-                continue vetGroups;
-            if (startTimeB > startTimeA && endTimeB < endTimeA)
-                continue vetGroups;
-        }
-        if (!!acceptableFilter) {
-            acceptableGprs.push(vtGrp);
-            const acceptablesNext: Acceptable[] = vtGrp.map(vet => ({ vet, filter: acceptableFilter }))
-            acceptables.push(...acceptablesNext);
+    for (let k = 0; k < filters.length; k++) {
+        const filter = filters[k];
+        if(!equalDateStrings(filter.date, date))
+            continue;
+        const incrementBy = filter.preferedDuration === 'Max' ? 1 : -1;
+        let i = filter.preferedDuration === 'Max' ? 0 : vetGroups.length - 1;
+        vetGroups:
+        for (i; i > -1 && i < vetGroups.length; i += incrementBy) {
+            const vtGrp = vetGroups[i];
+            const acceptableFilter = isVTGroupAcceptable([filter], vtGrp);
+            if (!!acceptableFilter) {
+                for (let index = 0; index < acceptableGprs.length; index++) {
+                    const existingGrp = acceptableGprs[index];
+                    const startTimeA = existingGrp[0].startTime;
+                    const endTimeA = existingGrp[existingGrp.length - 1].endTime;
+                    const startTimeB = vtGrp[0].startTime;
+                    const endTimeB = vtGrp[vtGrp.length - 1].endTime;
+                    const isABeforeB = startTimeA < startTimeB && endTimeA <= startTimeB;
+                    const isBBeforeA = startTimeB < startTimeA && endTimeB <= startTimeA;
+                    if (!isABeforeB && !isBBeforeA) 
+                        continue vetGroups;
+                }
+                acceptableGprs.push(vtGrp);
+                const acceptablesNext: Acceptable[] = vtGrp.map(vet => ({ vet, filter: acceptableFilter }))
+                acceptables.push(...acceptablesNext);
+            }
         }
     }
+    
     // for (let i = 0; i < vets.length; i++) {
     //     const vet = vets[i];
     //     const acceptableFilter = isVTOAcceptable(filters, vet);

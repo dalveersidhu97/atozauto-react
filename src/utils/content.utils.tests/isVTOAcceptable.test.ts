@@ -22,6 +22,7 @@ describe('isVTOAcceptable', () => {
                     { type: 'End Time', op: 'eq', minutes: 710 },
                 ],
                 "forName": "Dalveer",
+                preferedDuration: 'Max',
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);
@@ -43,6 +44,7 @@ describe('isVTOAcceptable', () => {
                     { type: 'End Time', op: 'gte', minutes: 710 },
                     { type: 'End Time', op: 'gt', minutes: 700 },
                 ],
+                preferedDuration: 'Max',
                 "forName": "Dalveer",
             }
         ]
