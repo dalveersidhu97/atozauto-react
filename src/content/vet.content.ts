@@ -192,19 +192,30 @@ const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter
     console.log('Groups', vetGroups);
     type Acceptable = { vet: VETType, filter: FilterType };
     let acceptables: Acceptable[] = [];
+    let acceptableGprs = [];
 
     const incrementBy = order.duration === 'desc' ? 1 : -1;
     let i = order.duration === 'desc' ? 0 : vetGroups.length - 1;
 
+    vetGroups:
     for (i; i > -1 && i < vetGroups.length; i += incrementBy) {
         const vtGrp = vetGroups[i];
         const acceptableFilter = isVTGroupAcceptable(filters, vtGrp);
-        filters = filters.filter(filter => {
-            if (deepEqualObjects(acceptableFilter, filter))
-                return false;
-            return true;
-        })
+        for (let index = 0; index < acceptableGprs.length; index++) {
+            const existingGrp = acceptableGprs[index];
+            const startTimeA = existingGrp[0].startTime;
+            const endTimeA = existingGrp[existingGrp.length - 1].endTime;
+            const startTimeB = vtGrp[0].startTime;
+            const endTimeB = vtGrp[vtGrp.length - 1].endTime;
+            if (startTimeA === startTimeB || endTimeA === endTimeB)
+                continue vetGroups;
+            if (startTimeA > startTimeB && endTimeA < endTimeB)
+                continue vetGroups;
+            if (startTimeB > startTimeA && endTimeB < endTimeA)
+                continue vetGroups;
+        }
         if (!!acceptableFilter) {
+            acceptableGprs.push(vtGrp);
             const acceptablesNext: Acceptable[] = vtGrp.map(vet => ({ vet, filter: acceptableFilter }))
             acceptables.push(...acceptablesNext);
         }

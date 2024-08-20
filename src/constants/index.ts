@@ -10,8 +10,8 @@ export const TimeOperators: { key: TimeOps, label: string }[] = [
 ]
 
 export const DurationOperators: { key: TimeOps, label: string }[] = [
-    { key: 'gte', label: 'Max' },
-    { key: 'lte', label: 'Min' },
+    { key: 'lte', label: 'Max' },
+    { key: 'gte', label: 'Min' },
     { key: 'eq', label: 'Equal' },
 ];
 

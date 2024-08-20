@@ -109,7 +109,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         })
         const filter: FilterType = {
             timeRules: timeRules.map(rule => {
-                if (rule.type === 'Start Time') return rule;
+                if (rule.type === 'Start Time' || rule.type === 'Duration') return rule;
                 return { ...rule, minutes: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) }
             }),
             date: formatDate(date),

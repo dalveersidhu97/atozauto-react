@@ -138,7 +138,13 @@ const is = (val1: number, op: TimeOps, val2: number) => {
     return isValid;
 }
 
-export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
+export const durationMinutes = (startMins: number, endMins: number) => {
+    if (endMins <= startMins)
+        endMins = endMins + 24 * 60;
+    return endMins - startMins;
+}
+
+export const validateVTOFilter = (vto: Omit<VTOType, 'button'>, duration: number, filter: FilterType) => {
     const userName = getUserInfo().name || '';
     const vtoDate = vto.date;
     const requiredDate = filter.date;
@@ -157,8 +163,11 @@ export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
         let valid = true;
         if (timeRule.type === 'Start Time')
             valid = is(vto.startTime, timeRule.op, timeRule.minutes);
-        else
+        else if(timeRule.type === 'End Time')
             valid = is(vto.endTime, timeRule.op, timeRule.minutes);
+        else if (timeRule.type === 'Duration') {
+            valid = is(duration, timeRule.op, timeRule.minutes)
+        }
         if (!valid) return false;
     }
     return true;
@@ -166,7 +175,7 @@ export const validateVTOFilter = (vto: VTOType, filter: FilterType) => {
 
 export const isVTOAcceptable = (vtoFilters: FilterType[], vto: VTOType) => {
     for (let i = 0; i < vtoFilters.length; i++) {
-        const isFilterValid = validateVTOFilter(vto, vtoFilters[i]);
+        const isFilterValid = validateVTOFilter(vto, durationMinutes(vto.startTime, vto.endTime), vtoFilters[i]);
         if (isFilterValid) {
             return vtoFilters[i];
         }
@@ -174,38 +183,18 @@ export const isVTOAcceptable = (vtoFilters: FilterType[], vto: VTOType) => {
     return false;
 }
 
-export const validateVTGroup = <T extends VoluntaryElementBaseType>(vtoOrVETGroup: T[], filter: FilterType) => {
-    if (!vtoOrVETGroup.length) return false;
-    const userName = getUserInfo().name || '';
-    const vtoDate = vtoOrVETGroup[0].date;
-    const requiredDate = filter.date;
-
-    if (filter.forName.toLowerCase().trim() !== userName.toLowerCase().trim()) {
-        console.log('User name does not match')
-        return false;
-    }
-
-    if (!equalDateStrings(vtoDate, requiredDate)) {
-        return false;
-    }
-
-    for (let index = 0; index < filter.timeRules.length; index++) {
-        const timeRule = filter.timeRules[index];
-        let valid = true;
-        const startTime = vtoOrVETGroup[0].startTime;
-        const endTime = vtoOrVETGroup[vtoOrVETGroup.length-1].endTime;
-        if (timeRule.type === 'Start Time')
-            valid = is(startTime, timeRule.op, timeRule.minutes);
-        else
-            valid = is(endTime, timeRule.op, timeRule.minutes);
-        if (!valid) return false;
-    }
-    return true;
-}
-
 export const isVTGroupAcceptable = <T extends VoluntaryElementBaseType>(vtoFilters: FilterType[], vtoOrVet: T[]) => {
+    if (!vtoOrVet.length) return false;
+    let duration = 0;
+    vtoOrVet.forEach(v => {
+        duration += durationMinutes(v.startTime, v.endTime);
+    });
     for (let i = 0; i < vtoFilters.length; i++) {
-        const isFilterValid = validateVTGroup(vtoOrVet, vtoFilters[i]);
+        const isFilterValid = validateVTOFilter({
+            date: vtoOrVet[0].date,
+            endTime: vtoOrVet[vtoOrVet.length - 1].endTime,
+            startTime: vtoOrVet[0].startTime,
+        }, duration, vtoFilters[i]);
         if (isFilterValid) {
             return vtoFilters[i];
         }
