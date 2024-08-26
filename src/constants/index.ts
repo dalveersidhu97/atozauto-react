@@ -2,17 +2,17 @@ import { UIPreferenceType } from "../hooks/useUIPreference"
 import { PreferenceType, TimeOps } from "../types"
 
 export const TimeOperators: { key: TimeOps, label: string }[] = [
-    { key: 'eq', label: 'At' },
-    { key: 'gt', label: 'After' },
-    { key: 'lt', label: 'Before' },
-    { key: 'gte', label: 'At or After' },
-    { key: 'lte', label: 'At or Before' }
+    { key: 'eq', label: 'at' },
+    { key: 'gt', label: 'after' },
+    { key: 'lt', label: 'before' },
+    { key: 'gte', label: 'at or after' },
+    { key: 'lte', label: 'at or before' }
 ]
 
 export const DurationOperators: { key: TimeOps, label: string }[] = [
-    { key: 'lte', label: 'Max' },
-    { key: 'gte', label: 'Min' },
-    { key: 'eq', label: 'Equal' },
+    { key: 'lte', label: 'max' },
+    { key: 'gte', label: 'min' },
+    { key: 'eq', label: 'equal' },
 ];
 
 export const defaultPreference: PreferenceType = {

@@ -51,10 +51,10 @@ export const FilterList: FC<{ list: FilterType[], onDelete: (filter: FilterType)
                             </Badge>
                             <div className="flex-grow flex flex-col gap-2">
                                 <p className="font-semibold text-gray-600 flex items-start gap-2 justify-between">
-                                    <span>{filter.forName} ({filter.date})</span>
+                                    <span>{filter.forName} ({filter.date}) <span className="font-normal text-xs">{filter.deleteAfterMatch?'(Use Once)':''}</span></span>
                                 </p>
                                 {filter.timeRules.map((timeRule, j) => <Fragment key={'timeRule'+j}>
-                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{timeRule.type === 'Duration' ?  durationString(timeRule.minutes): intMinsToTime12(timeRule.minutes || 0)}</span></div>
+                                    <div>{timeRule.type} ({timeRule.op}): <span className="text-gray-500 font-semibold">{['Duration', 'Gap', 'Total Gap'].includes(timeRule.type) ?  durationString(timeRule.minutes): intMinsToTime12(timeRule.minutes || 0)}</span></div>
                                 </Fragment>)}
                                 <p className="text-gray-600 flex items-start gap-2 justify-between">
                                     <span>Prefer {filter.preferedDuration === 'Max' ? 'Maximum' : 'Minimum'} Duration</span>

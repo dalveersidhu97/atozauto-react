@@ -1,6 +1,6 @@
 import React, { FC, Fragment, useEffect, useId, useState } from "react";
 import { adjustIntMinsForMinimumValue, formatDate, formatDateForInput, getCurrentTime, intMinsToTimeStr, moveObjectWithKeyToFront, timeStringToIntMins } from "../utils/formatters";
-import { Button, Datepicker, Dropdown, Label, Radio, TextInput } from "flowbite-react";
+import { Button, Checkbox, Datepicker, Dropdown, Label, Radio, TextInput } from "flowbite-react";
 import { IoIosArrowDown } from "react-icons/io";
 import { FilterType, TimeOps, TimeRule } from "../types";
 import { defaultPreference, defaultUIPreference, TimeOperators, DurationOperators } from "../constants";
@@ -57,9 +57,9 @@ const DurationInput: FC<{ defaultValue?: number, min?: number, max?: number, onC
 
     return <>
         <div role="textbox" className="flex shrink-1 grow-0 items-center text-sm gap-1.5">
-            <input onChange={onChangeHours} min={0} max={24} maxLength={2} size={1} defaultValue={h} type="text" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 grow" />
+            <input onBlur={onChangeHours} min={0} max={24} maxLength={2} size={1} defaultValue={h} type="text" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 grow" />
             <div>h</div>
-            <input onChange={(onChangeMins)} min={0} max={60} maxLength={2} size={1} defaultValue={m} type="text" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 grow" />
+            <input onBlur={(onChangeMins)} min={0} max={60} maxLength={2} size={1} defaultValue={m} type="text" className="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 grow" />
             <div className="">m</div>
         </div>
     </>;
@@ -86,15 +86,31 @@ const Select: FC<{ options: { key: string, label: string }[], selectedKey: strin
 type CreateFilterFn = (filter: FilterType) => any;
 export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVETFilter: CreateFilterFn }> = ({ onCreateVETFilter, onCreateVTOFilter }) => {
 
+    const options = [
+        { key: 'Start Time', label: 'Start Time' },
+        { key: 'End Time', label: 'End Time' },
+        { key: 'Duration', label: 'Duration' },
+        { key: 'Gap', label: 'Gap' },
+        { key: 'Total Gap', label: 'Total Gap' }
+    ];
+    const durationInputKeys: TimeRule['type'][] = ['Duration', 'Gap', 'Total Gap'];
+    const timeInputKeys: TimeRule['type'][] = ['Start Time', 'End Time'];
+    const defaultTimeRules: TimeRule[] = [
+        { op: 'eq', minutes: 80, type: 'Start Time' }, 
+        { op: 'eq', minutes: 710, type: 'End Time' }, 
+        { op: 'lte', minutes: 30, type: 'Gap' }
+    ];
+
     const { UIPreference, setUIPreference } = useUIPreference();
 
     const filterType = UIPreference.lastFilterType || defaultUIPreference.lastFilterType;
-    const setFilterType = (fType: 'VTO' | 'VET') => setUIPreference(() => ({ lastFilterType: fType }))
-    const [timeRules, setTimeRules] = useState<TimeRule[]>([{ op: 'eq', minutes: 80, type: 'Start Time' }, { op: 'eq', minutes: 710, type: 'End Time' }]);
+    const setFilterType = (fType: 'VTO' | 'VET') => setUIPreference(() => ({ lastFilterType: fType }));
+    const [timeRules, setTimeRules] = useState(defaultTimeRules);
     const [date, setDate] = useState(new Date());
     const [userInfo] = useUserInfo();
     const [forName, setForName] = useState('');
-    const [preferedDuration, setPreferedDuration] = useState<'Min'|'Max'>('Max');
+    const [deleteAfterMatch, setDeleteAfterMatch] = useState<FilterType['deleteAfterMatch']>(true);
+    const [preferedDuration, setPreferedDuration] = useState<FilterType['preferedDuration']>('Max');
 
     useEffect(() => {
         if (userInfo?.name)
@@ -110,13 +126,15 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         })
         const filter: FilterType = {
             timeRules: timeRules.map(rule => {
-                if (rule.type === 'Start Time' || rule.type === 'Duration') return rule;
-                return { ...rule, minutes: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) }
+                if (rule.type === 'End Time')
+                    return { ...rule, minutes: adjustIntMinsForMinimumValue(rule.minutes, maxStartTimeVal) };
+                return rule;
             }),
             preferedDuration,
             date: formatDate(date),
             forName: forName.trim(),
-            gap: 0,
+            deleteAfterMatch,
+            maxGroups: 1
         }
         const createFilter = filterType === 'VTO' ? onCreateVTOFilter : onCreateVETFilter;
         createFilter(filter);
@@ -132,7 +150,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const updateRuleAtIndex = (i: number, newRule: TimeRule) => {
         setTimeRules(prevRules => {
             return prevRules.map((rule, j) => {
-                if (i === j && newRule.type === 'Duration' && rule.type !== 'Duration') {
+                if (i === j && durationInputKeys.includes(newRule.type) && !durationInputKeys.includes(rule.type)) {
                     return { ...newRule, op: 'eq', minutes: 0 }
                 }
                 return i === j ? newRule : rule
@@ -172,16 +190,16 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         </div>
         <div className="grid grid-cols-[1fr_1fr_1fr_max-content] gap-2">
             {timeRules.map((rule, i) => {
-                const operators = rule.type === 'Duration' ? DurationOperators : TimeOperators;
+                const operators = durationInputKeys.includes(rule.type) ? DurationOperators : TimeOperators;
                 return <Fragment key={'rule' + i + Math.random()}>
                     <Select
-                        options={[{ key: 'Start Time', label: 'Start Time' }, { key: 'End Time', label: 'End Time' }, { key: 'Duration', label: 'Duration' }]}
+                        options={options}
                         selectedKey={rule.type}
                         onChange={(timeType) => updateRuleAtIndex(i, { ...rule, type: timeType as TimeRule['type'] })}
                     />
                     <Select options={operators} selectedKey={rule.op} onChange={(opKey) => updateRuleAtIndex(i, { ...rule, op: opKey as TimeOps })} />
-                    {rule.type !== 'Duration' && <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />}
-                    {rule.type === 'Duration' && <DurationInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />}
+                    {timeInputKeys.includes(rule.type) && <TimeInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />}
+                    {durationInputKeys.includes(rule.type) && <DurationInput onChange={(intMins) => updateRuleAtIndex(i, { ...rule, minutes: intMins })} defaultValue={rule.minutes} />}
                     <button className="flex items-center justify-center" onClick={() => deleteRuleAtIndex(i)}><MdDeleteOutline className="w-6 h-6" /></button>
                 </Fragment>
             })}
@@ -189,12 +207,18 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
         <Button color={'gray'} className="max-w-fit self-center" onClick={onClickAddRule}>+ Add Rule</Button>
         <div className="flex gap-3">
             <div className="flex gap-1 items-center">
-                <Radio name="preferedDuration" id="preferedDurationMax" value={'DurationMax'} onChange={(e)=>e.target.checked && setPreferedDuration('Max')} defaultChecked={preferedDuration==='Max'}></Radio>
+                <Radio name="preferedDuration" id="preferedDurationMax" value={'DurationMax'} onChange={(e) => e.target.checked && setPreferedDuration('Max')} defaultChecked={preferedDuration === 'Max'}></Radio>
                 <Label htmlFor="preferedDurationMax">Prefer Maximum Duration</Label>
             </div>
             <div className="flex gap-1 items-center">
-                <Radio name="preferedDuration" id="preferedDurationMin" value={'DurationMin'} onChange={(e)=>e.target.checked && setPreferedDuration('Min')} defaultChecked={preferedDuration==='Min'}></Radio>
+                <Radio name="preferedDuration" id="preferedDurationMin" value={'DurationMin'} onChange={(e) => e.target.checked && setPreferedDuration('Min')} defaultChecked={preferedDuration === 'Min'}></Radio>
                 <Label htmlFor="preferedDurationMin">Prefer Minimum Duration</Label>
+            </div>
+        </div>
+        <div className="flex gap-3">
+            <div className="flex items-center gap-2">
+                <Checkbox defaultChecked={deleteAfterMatch} onChange={(e) => setDeleteAfterMatch(e.target.checked)} id="clearFilterAfterMatchedCheckbox" />
+                <Label htmlFor="clearFilterAfterMatchedCheckbox">Delete Filter After Matched</Label>
             </div>
         </div>
         <Button onClick={onClickCreatefilter}>{`Add ${filterType} Filter`}</Button>

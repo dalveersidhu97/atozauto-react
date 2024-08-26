@@ -1,8 +1,8 @@
 import { StorageKeys } from "../constants";
-import { FilterType, PreferenceType, VETType } from "../types";
-import { closeModal, equalDateStrings, finalCallBack, isVTGroupAcceptable, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
+import { FilterType, PreferenceType, VETType, VoluntaryElementBaseType } from "../types";
+import { closeModal, equalDateStrings, finalCallBack, is, isVTGroupAcceptable, isVTOAcceptable, looper, pressModalButton, pressModalButtonTemp, removeFilter, sortArray } from "../utils/content.utils";
 import { convertTimeToMins, dateFormatter } from "../utils/formatters";
-import { makeGroups } from "../utils/grouping.utils";
+import { Acceptable, makeAcceptables, makeVTGroupsForFilter } from "../utils/grouping.utils";
 import { createInfoBoxWithHTML, InjectorQueue } from "../utils/html.utils";
 import { startMain } from "./init.content";
 
@@ -29,7 +29,8 @@ const getVetsFromContext = (date: string, context: Element, { isTestMode }: { is
                     date,
                     startTime,
                     endTime: convertTimeToMins(endTimeStr, startTime),
-                    timeStr
+                    timeStr,
+                    claimed: false
                 } as VETType;
                 vets.push(vet);
             }
@@ -41,15 +42,20 @@ const getVetsFromContext = (date: string, context: Element, { isTestMode }: { is
 const getVets = (date: string, { isTestMode }: { isTestMode: boolean }) => {
     const presentation = document.querySelector('div[role="presentation"]');
     if (!presentation) return [];
-    const vets = getVetsFromContext(date, presentation, { isTestMode });
-    return vets;
+    const claimedVetsContext = presentation.querySelector('div[data-test-id="ClaimedShiftsList"]');
+    const vetsContextArr = presentation.querySelectorAll(':scope > div[data-test-component="StencilReactCol"]');
+    const vetsContext = vetsContextArr.length === 2 ? vetsContextArr[1] : undefined;
+    const vets = !!vetsContext ? getVetsFromContext(date, vetsContext, { isTestMode }) : [];
+    let claimedVets = claimedVetsContext ? getVetsFromContext(date, claimedVetsContext, { isTestMode }) : [];
+    claimedVets = claimedVets.map(vet => ({ ...vet, claimed: true }));
+    return [...claimedVets, ...vets];
 }
 
 
 const acceptVET = (vet: VETType, isTestMode: boolean, callBack: (vetAccepted?: boolean) => void) => {
     vet.button?.click();
     if (isTestMode) {
-        setTimeout(() => closeModal(callBack), 2000);
+        setTimeout(() => closeModal(() => callBack(true)), 2000);
         return;
     }
     setTimeout(() => {
@@ -142,6 +148,7 @@ const selectDay = (inputDate: string, callback: () => void, shouldWaitForLoading
     const daySelector = document.querySelector('div[data-test-id="day-selector"]');
     if (!daySelector) {
         console.log('No day Selector')
+        callback();
         return;
     }
     const tabList = daySelector.querySelector('div[role="tablist"]') as HTMLElement;
@@ -183,60 +190,19 @@ const acceptAllAcceptables = (filters: FilterType[], date: string, callBackOuter
     const isTestMode = testMode === 'On';
     let vets = getVets(date, { isTestMode });
     console.log('Ready VETS', { vets });
-    type Acceptable = { vet: VETType, filter: FilterType };
-    let acceptables: Acceptable[] = [];
-    let acceptableGprs = [];
-
-    for (let k = 0; k < filters.length; k++) {
-        const filter = filters[k];
-        let vetGroups = makeGroups(vets, filter.preferedDuration === 'Max' ? 'desc' : 'asc', (gap) => gap > -1 && gap <= 0);
-        if (!equalDateStrings(filter.date, date))
-            continue;
-        vetGroups:
-        for (let i = 0; i < vetGroups.length; i++) {
-            const vtGrp = vetGroups[i];
-            const acceptableFilter = isVTGroupAcceptable([filter], vtGrp);
-            if (!!acceptableFilter) {
-                for (let index = 0; index < acceptableGprs.length; index++) {
-                    const existingGrp = acceptableGprs[index];
-                    const startTimeA = existingGrp[0].startTime;
-                    const endTimeA = existingGrp[existingGrp.length - 1].endTime;
-                    const startTimeB = vtGrp[0].startTime;
-                    const endTimeB = vtGrp[vtGrp.length - 1].endTime;
-                    const isABeforeB = startTimeA < startTimeB && endTimeA <= startTimeB;
-                    const isBBeforeA = startTimeB < startTimeA && endTimeB <= startTimeA;
-                    if (!isABeforeB && !isBBeforeA)
-                        continue vetGroups;
-                }
-                acceptableGprs.push(vtGrp);
-                const acceptablesNext: Acceptable[] = vtGrp.map(vet => ({ vet, filter: acceptableFilter }))
-                acceptables.push(...acceptablesNext);
-            }
-        }
-    }
-
-    // for (let i = 0; i < vets.length; i++) {
-    //     const vet = vets[i];
-    //     const acceptableFilter = isVTOAcceptable(filters, vet);
-    //     if (!!acceptableFilter) {
-    //         acceptables.push({ vet, filter: acceptableFilter });
-    //     }
-    // }
-    console.log('Acceptable VETS', { acceptables });
-    let acceptablesSortedAsFilters = sortArray(acceptables, filters);
+    
+    let acceptablesSortedAsFilters = makeAcceptables(vets, date, filters);
     console.log('Acceptable Sorted As Filters VETS', { acceptablesSortedAsFilters });
     const injector = () => createInfoBoxWithHTML(`${acceptablesSortedAsFilters.length} Acceptable VETs`);
     InjectorQueue.add(injector);
 
     looper(acceptablesSortedAsFilters, (acceptable: Acceptable, callBack, index) => {
-        const vet = acceptable.vet;
+        const vet = acceptable.vtoOrVET;
         const filter = acceptable.filter;
-
         const injector = () => createInfoBoxWithHTML(`Accepting VET...</br>(${index + 1} of ${acceptablesSortedAsFilters.length})`);
         InjectorQueue.add(injector);
-
         acceptVET(vet, isTestMode, (vetAccepted) => {
-            !isTestMode && vetAccepted && removeFilter(StorageKeys.vetFilters, filter);
+            filter.deleteAfterMatch && vetAccepted && removeFilter(StorageKeys.vetFilters, filter);
             callBack();
         });
     }, callBackOuter, 'AcceptVETSLooper', 200);

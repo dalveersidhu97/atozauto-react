@@ -125,7 +125,7 @@ export const equalDateStrings = (dateString1: string, dateString2: string) => { 
     return datesEqual;
 }
 
-const is = (val1: number, op: TimeOps, val2: number) => {
+export const is = (val1: number, op: TimeOps, val2: number) => {
     let isValid = false;
     switch (op) {
         case 'gt': { if (val1 > val2) isValid = true; break; }
@@ -194,6 +194,7 @@ export const isVTGroupAcceptable = <T extends VoluntaryElementBaseType>(vtoFilte
             date: vtoOrVet[0].date,
             endTime: vtoOrVet[vtoOrVet.length - 1].endTime,
             startTime: vtoOrVet[0].startTime,
+            claimed: vtoOrVet[0].claimed
         }, duration, vtoFilters[i]);
         if (isFilterValid) {
             return vtoFilters[i];

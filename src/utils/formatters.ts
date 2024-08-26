@@ -20,7 +20,7 @@ export function getCurrentTime() {
 }
 
 export const adjustIntMinsForMinimumValue = (intMins: number, minimumIntMins?: number) => {
-    if (minimumIntMins !== undefined && intMins < minimumIntMins)
+    if (minimumIntMins !== undefined && intMins <= minimumIntMins)
         intMins = 24 * 60 + intMins;
     return intMins;
 }

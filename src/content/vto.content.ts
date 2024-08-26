@@ -32,7 +32,7 @@ const getVtos = ({ isTestMode }: { isTestMode: boolean }) => {
                 const times = time.split(' - ');
                 const startTime = convertTimeToMins(times[0]);
                 const endTime = convertTimeToMins(times[1]);
-                vtos.push({ date: h1, startTime, endTime, button })
+                vtos.push({ date: h1, startTime, endTime, button, claimed: false })
             }
         })
     })

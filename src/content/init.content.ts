@@ -4,6 +4,8 @@ import { setUserInfo } from "../utils/content.utils";
 import { createInfoBoxWithHTML, injectInfoToPage, InjectorQueue, injectReloadingInfoBoxMillis, removeInfoBox } from "../utils/html.utils";
 
 const loaded = () => {
+    const navigation = document.querySelector('nav[role="navigation"]');
+    if (!navigation) return false;
     let loadingSpinner = document.querySelector('svg[data-test-id="VtoLandingPage_Spinner"]');
     if(!loadingSpinner) loadingSpinner = document.querySelector('svg[data-test-id="FindShiftsPageLoadingSpinner"]');
     if (!!loadingSpinner) {
@@ -22,7 +24,7 @@ export const startMain = (main: (preference: PreferenceType) => void) => {
             const preference = result.preference || {};
             if (preference.refreshMode !== 'Off') {
                 InjectorQueue.add(()=>createInfoBoxWithHTML('Loading...'));
-                const reloadingInMillis = 10*1000;
+                const reloadingInMillis = 5*1000;
                 noResponseReloadTimeout = setTimeout(() => {
                     window.location.reload();
                     injectReloadingInfoBoxMillis(reloadingInMillis);

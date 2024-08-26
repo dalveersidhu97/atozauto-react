@@ -11,7 +11,8 @@ describe('isVTOAcceptable', () => {
             "date": "Fri, Jul 5",
             "startTime": 40,
             "endTime": 710,
-            "button": null
+            "button": null,
+            claimed: false
         }
         const filters: FilterType[] = [
             {
@@ -23,7 +24,8 @@ describe('isVTOAcceptable', () => {
                 ],
                 "forName": "Dalveer",
                 preferedDuration: 'Max',
-                gap: 0,
+                deleteAfterMatch: true,
+                maxGroups: 1
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);
@@ -34,7 +36,8 @@ describe('isVTOAcceptable', () => {
             "date": "Jul 5",
             "startTime": 40,
             "endTime": 710,
-            "button": null
+            "button": null,
+            claimed: false
         }
         const filters: FilterType[] = [
             {
@@ -47,7 +50,8 @@ describe('isVTOAcceptable', () => {
                 ],
                 preferedDuration: 'Max',
                 "forName": "Dalveer",
-                gap: 0,
+                deleteAfterMatch: true,
+                maxGroups: 1
             }
         ]
         expect(contentUtils.isVTOAcceptable(filters, vto)).toMatchObject(filters[0]);

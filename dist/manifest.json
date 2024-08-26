@@ -13,7 +13,7 @@
   "content_scripts": [
     {
       "js": [
-        "assets/content-script-loader.userInfo.content.ts.ac18a0ae.74a55e90.js"
+        "assets/content-script-loader.userInfo.content.ts.e50b1b16.a04cd808.js"
       ],
       "matches": [
         "https://atoz.amazon.work/*"
@@ -25,7 +25,7 @@
     },
     {
       "js": [
-        "assets/content-script-loader.vto.content.ts.1c9836ee.2f1c86b7.js"
+        "assets/content-script-loader.vto.content.ts.b6ed0629.3287663d.js"
       ],
       "matches": [
         "https://atoz.amazon.work/voluntary_time_off/*"
@@ -34,7 +34,7 @@
     },
     {
       "js": [
-        "assets/content-script-loader.vet.content.ts.38ce9e62.d4f51892.js"
+        "assets/content-script-loader.vet.content.ts.2846e45e.0b54a31a.js"
       ],
       "matches": [
         "https://atoz.amazon.work/shifts/schedule/find*"
@@ -51,13 +51,13 @@
         "https://atoz.amazon.work/*"
       ],
       "resources": [
-        "assets/content.utils.1be2cea8.js",
-        "assets/comparison.utils.08c82949.js",
-        "assets/userInfo.content.ts.ac18a0ae.js",
-        "assets/formatters.738ad4ac.js",
-        "assets/init.content.8bae4b55.js",
-        "assets/vto.content.ts.1c9836ee.js",
-        "assets/vet.content.ts.38ce9e62.js"
+        "assets/content.utils.cdfe0a71.js",
+        "assets/comparison.utils.49eb01ae.js",
+        "assets/userInfo.content.ts.e50b1b16.js",
+        "assets/formatters.c3b942d2.js",
+        "assets/init.content.bbae9844.js",
+        "assets/vto.content.ts.b6ed0629.js",
+        "assets/vet.content.ts.2846e45e.js"
       ],
       "use_dynamic_url": true
     }
