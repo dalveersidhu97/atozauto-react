@@ -96,8 +96,8 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const durationInputKeys: TimeRule['type'][] = ['Duration', 'Gap', 'Total Gap'];
     const timeInputKeys: TimeRule['type'][] = ['Start Time', 'End Time'];
     const defaultTimeRules: TimeRule[] = [
-        { op: 'eq', minutes: 80, type: 'Start Time' }, 
-        { op: 'eq', minutes: 710, type: 'End Time' }, 
+        { op: 'gte', minutes: 0, type: 'Start Time' }, 
+        { op: 'lte', minutes: 12 * 60, type: 'End Time' }, 
         { op: 'lte', minutes: 30, type: 'Gap' }
     ];
 
@@ -109,7 +109,7 @@ export const FilterInputForm: FC<{ onCreateVTOFilter: CreateFilterFn, onCreateVE
     const [date, setDate] = useState(new Date());
     const [userInfo] = useUserInfo();
     const [forName, setForName] = useState('');
-    const [deleteAfterMatch, setDeleteAfterMatch] = useState<FilterType['deleteAfterMatch']>(true);
+    const [deleteAfterMatch, setDeleteAfterMatch] = useState<FilterType['deleteAfterMatch']>(false);
     const [preferedDuration, setPreferedDuration] = useState<FilterType['preferedDuration']>('Max');
 
     useEffect(() => {
