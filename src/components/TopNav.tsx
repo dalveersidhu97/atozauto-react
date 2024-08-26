@@ -7,7 +7,7 @@ export function TopNav() {
         <span className="text-sky-500 text-lg pt-1">to</span>
         <span className="text-sky-500">z</span>
       </h1>
-      <div className="text-base font-normal">Dalveer</div>
+      <div className="text-base font-normal">By Dalveer Singh</div>
     </div>
   );
 }
