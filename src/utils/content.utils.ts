@@ -68,7 +68,8 @@ export const getUserInfo = () => {
     if (typeof document === 'undefined') return { name: '' };
     const navbar = document.querySelector('#navbar-menu');
     if (!navbar) return {};
-    const img = navbar.querySelector(`img[alt="User's avatar"]`) as HTMLElement | undefined;
+    let img = navbar.querySelector(`img[alt="User's avatar"]`) as HTMLElement | undefined;
+    if (!img) img = navbar.querySelector(`img[alt="badgePhotoAlt"]`) as HTMLElement | undefined;
     const name = img?.parentElement?.parentElement?.innerText;
     return { name: name?.trim(), img: img?.getAttribute('src') }
 }
